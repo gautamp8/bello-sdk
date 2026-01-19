@@ -1,0 +1,337 @@
+:host {
+  all: initial;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI,
+    Roboto, Arial, Noto Sans, 'Apple Color Emoji', 'Segoe UI Emoji';
+
+  /* defaults (can be overridden via themeVars) */
+  --bello-bg: #111;
+  --bello-fg: #fff;
+  --bello-surface: #111;
+  --bello-border: rgba(255, 255, 255, 0.12);
+  --bello-cta-bg: #fff;
+  --bello-cta-fg: #111;
+  --bello-subtle: rgba(255, 255, 255, 0.72);
+  --bello-danger: #ff6b6b;
+  --bello-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+
+  --bello-radius: 12px;
+  --bello-radius-pill: 999px;
+  --bello-gap: 12px;
+  --bello-pop-offset: 50px;
+
+  --bello-width: 420px;
+  --bello-height: 520px;
+  --bello-fab-size-width: 80px;
+  --bello-fab-size-height: 52px;
+  --bello-fab-gap: 12px;
+}
+
+/* Themes only set alternate defaults; API variables still win */
+.theme-light :host,
+.theme-light {
+  --bello-bg: #fff;
+  --bello-fg: #111;
+  --bello-surface: #fff;
+  --bello-border: rgba(0, 0, 0, 0.08);
+  --bello-cta-bg: #111;
+  --bello-cta-fg: #fff;
+  --bello-subtle: rgba(17, 17, 17, 0.72);
+}
+.theme-glass :host,
+.theme-glass {
+  --bello-surface: rgba(255, 255, 255, 0.1);
+  --bello-fg: #111;
+  --bello-border: rgba(255, 255, 255, 0.2);
+  --bello-cta-bg: #111;
+  --bello-cta-fg: #fff;
+  backdrop-filter: blur(10px);
+}
+
+/* containers */
+.bello-container {
+  border-radius: var(--bello-radius);
+  border: 1px solid var(--bello-border);
+  box-shadow: var(--bello-shadow);
+  padding: var(--bello-gap);
+  background: var(--bello-surface);
+  color: var(--bello-fg);
+}
+
+.bello-title-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bello-card {
+  border-radius: var(--bello-radius);
+  border: 1px solid var(--bello-border);
+  background: var(--bello-surface);
+  color: var(--bello-fg);
+}
+
+/* buttons */
+.bello-trigger {
+  border-radius: var(--bello-radius-pill);
+  padding: 10px 18px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: var(--bello-cta-bg);
+  color: var(--bello-cta-fg);
+}
+.bello-trigger.small {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.bello-trigger:hover {
+  opacity: 0.9;
+}
+
+.bello-trigger-danger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--bello-radius-pill);
+  padding: 10px 18px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: var(--bello-danger);
+  color: #fff;
+}
+.bello-trigger-danger.small {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.bello-trigger-danger:hover {
+  opacity: 0.9;
+}
+
+/* header */
+.bello-header {
+  display: flex;
+  align-items: center;
+  gap: var(--bello-gap);
+  padding: var(--bello-gap);
+  border-bottom: 1px solid var(--bello-border);
+  justify-content: space-between;
+}
+.bello-title {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bello-subtitle {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* body/sizing */
+.bello-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: var(--bello-height);
+  width: var(--bello-width);
+  max-height: 80vh;
+}
+.bello-main {
+  flex: 1;
+  overflow: auto;
+  padding: var(--bello-gap);
+}
+/* The FAB is a sibling of .bello-pop inside the fixed anchor. */
+.bello-fab {
+  position: absolute; /* relative to the fixed anchor created by embed.tsx */
+  z-index: 2; /* above the card, but below any global launchers */
+  width: var(--bello-fab-size-width);
+  height: var(--bello-fab-size-height);
+  border-radius: 999px;
+  border: 1px solid var(--bello-border);
+  background: var(--bello-cta-bg);
+  color: var(--bello-cta-fg);
+  box-shadow: var(--bello-shadow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* default hidden positioning; specific corners below set the final spot */
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+}
+.bello-fab:hover {
+  opacity: 0.9;
+}
+
+/* Anchor the FAB to the SAME corner as the widget, but OUTSIDE the card. */
+.bello-pop[data-pos='bottom-right'] ~ .bello-fab {
+  right: calc(-1 * var(--bello-fab-gap));
+  bottom: calc(-1 * var(--bello-fab-gap));
+}
+.bello-pop[data-pos='bottom-left'] ~ .bello-fab {
+  left: calc(-1 * var(--bello-fab-gap));
+  bottom: calc(-1 * var(--bello-fab-gap));
+}
+.bello-pop[data-pos='top-right'] ~ .bello-fab {
+  right: calc(-1 * var(--bello-fab-gap));
+  top: calc(-1 * var(--bello-fab-gap));
+}
+.bello-pop[data-pos='top-left'] ~ .bello-fab {
+  left: calc(-1 * var(--bello-fab-gap));
+  top: calc(-1 * var(--bello-fab-gap));
+}
+
+.bello-footer {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 var(--bello-gap);
+}
+
+.bello-footer .chat-input-row {
+  width: 100%;
+}
+/* popover positioning */
+.bello-pop {
+  position: absolute;
+  transform-origin: bottom right;
+}
+.bello-pop[data-pos='bottom-right'] {
+  bottom: var(--bello-pop-offset);
+  right: 0;
+}
+.bello-pop[data-pos='bottom-left'] {
+  bottom: var(--bello-pop-offset);
+  left: 0;
+  transform-origin: bottom left;
+}
+.bello-pop[data-pos='top-right'] {
+  top: var(--bello-pop-offset);
+  right: 0;
+  transform-origin: top right;
+}
+.bello-pop[data-pos='top-left'] {
+  top: var(--bello-pop-offset);
+  left: 0;
+  transform-origin: top left;
+}
+
+/* helpers */
+.bello-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bello-hero {
+  font-weight: 700;
+}
+
+.bello-error {
+  border: 1px solid var(--bello-danger);
+  padding: var(--bello-gap);
+  border-radius: 8px;
+}
+.bello-error-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.bello-error-text {
+  font-size: 12px;
+  opacity: 0.9;
+}
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+.status {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* chat */
+.chat-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+.chat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-entry {
+  display: flex;
+  flex-direction: column;
+}
+.chat-entry.me {
+  align-items: flex-end;
+} /* YOU → right */
+.chat-entry.them {
+  align-items: flex-start;
+} /* AGENT → left */
+
+.chat-entry .chat-name {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+.chat-entry.me .chat-name {
+  align-self: flex-end;
+}
+.chat-entry.them .chat-name {
+  align-self: flex-start;
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--bello-border);
+}
+.chat-bubble.me {
+  background: rgba(0, 0, 0, 0.2);
+} /* you (right) */
+.chat-bubble.them {
+  background: rgba(255, 255, 255, 0.06);
+} /* agent (left) */
+
+.chat-text {
+  display: inline-block;
+}
+.chat-time {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-left: 8px;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.chat-input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--bello-border);
+  background: transparent;
+  color: var(--bello-fg);
+}
+.chat-input::placeholder {
+  color: var(--bello-subtle);
+}

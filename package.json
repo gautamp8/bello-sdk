@@ -1,0 +1,65 @@
+{
+  "name": "@bello/bello-sdk",
+  "private": false,
+  "description": "Bello SDK for embedding Bello in your applications",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/bello-embed.umd.cjs",
+  "module": "dist/bello-embed.es.js",
+  "unpkg": "dist/bello-embed.iife.js",
+  "types": "dist/types.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/bello-embed.es.js",
+      "require": "./dist/bello-embed.umd.cjs",
+      "default": "./dist/bello-embed.iife.js"
+    },
+    "./react": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/react.es.js",
+      "require": "./dist/react.cjs"
+    },
+    "./iife": {
+      "default": "./dist/bello-embed.iife.js"
+    }
+  },
+  "scripts": {
+    "dev:embed": "vite build --mode embed --watch",
+    "serve:root": "serve . -l 5174",
+    "dev:iife": "concurrently -k \"pnpm dev:embed\" \"pnpm serve:root\"",
+    "build:embed": "vite build --mode embed",
+    "build:react": "vite build --mode react",
+    "build": "rm -rf dist && pnpm build:embed && pnpm build:react"
+  },
+  "dependencies": {
+    "@livekit/components-react": "^2.9.14",
+    "framer-motion": "^12.23.12",
+    "livekit-client": "^2.15.6",
+    "lucide": "^0.544.0",
+    "lucide-react": "^0.544.0",
+    "react": "^19.0.0",
+    "react-ai-orb": "^1.0.13",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "sass-embedded": "^1.92.1",
+    "serve": "^14.2.3",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2"
+  }
+}
