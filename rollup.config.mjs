@@ -44,6 +44,14 @@ const inlineCss = () => {
 
 const basePlugins = [
   inlineCss(),
+  replace({
+    preventAssignment: true,
+    values: {
+      __BELLO_API_URL__: JSON.stringify(
+        process.env.BELLO_API_URL || 'https://api.heybello.dev'
+      ),
+    },
+  }),
   resolve({ extensions: ['.mjs', '.js', '.ts', '.tsx', '.json'] }),
   commonjs(),
   esbuild({

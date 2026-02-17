@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { ensureContainer, createShadowHost } from './mountShadow';
 import type { InitOptions, Theme, Cmd } from './types';
-import { fetchPublicConfig } from './api';
+import { fetchWidgetConfig } from './api';
 import { BelloWidget } from './widget/BelloWidget';
 import cssText from './index.css?inline';
 import './polyfills';
@@ -37,19 +37,29 @@ function applyThemeVars(vars?: Record<string, string>) {
 }
 
 async function mount(opts: InitOptions) {
-  const publicCfg = await fetchPublicConfig(opts);
+  // Fetch server config first, then merge with local overrides
+  let serverCfg;
+  try {
+    serverCfg = await fetchWidgetConfig(opts);
+  } catch (e) {
+    console.warn('[Bello] Failed to fetch widget config, using defaults:', e);
+    serverCfg = null;
+  }
+
+  // Merge: server config as base, then data attribute overrides on top
   currentOpts = {
     agentEnabled: opts.agentEnabled ?? true,
     voiceEnabled: opts.voiceEnabled ?? true,
     ...opts,
-    theme: opts.theme ?? publicCfg.theme,
-    orbStyle: opts.orbStyle ?? publicCfg.orbStyle,
-    position: opts.position ?? publicCfg.position,
-    widgetTitle: opts.widgetTitle ?? publicCfg.widgetTitle,
+    theme: opts.theme ?? serverCfg?.theme ?? 'dark',
+    accentColor: opts.accentColor ?? serverCfg?.accentColor ?? '#1FD5F9',
+    position: opts.position ?? serverCfg?.position ?? 'bottom-right',
+    widgetTitle: opts.widgetTitle ?? serverCfg?.widgetTitle ?? 'Chat with AI',
+    widgetSubtitle: opts.widgetSubtitle ?? serverCfg?.widgetSubtitle ?? 'Ask me anything',
     widgetButtonTitle:
-      opts.widgetButtonTitle ?? publicCfg.widgetButtonTitle,
+      opts.widgetButtonTitle ?? serverCfg?.widgetButtonTitle ?? 'Start chat',
     themeVars: {
-      ...(publicCfg.themeVars ?? {}),
+      ...(serverCfg?.themeVars ?? {}),
       ...(opts.themeVars ?? {}),
     },
   };

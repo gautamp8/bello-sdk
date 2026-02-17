@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       __DEV__: !isProd,
+      __BELLO_API_URL__: JSON.stringify(
+        process.env.BELLO_API_URL || 'https://api.heybello.dev'
+      ),
       'process.env.NODE_ENV': JSON.stringify(
         isProd ? 'production' : 'development'
       ),

@@ -4,25 +4,27 @@ import type {
   PublicConfig,
 } from './types';
 
-function normalizeVars(
-  v: unknown
-): Record<string, string> | undefined {
-  if (!v || typeof v !== 'object') return undefined;
-  const out: Record<string, string> = {};
-  for (const [k, val] of Object.entries(v as Record<string, any>)) {
-    if (val == null) continue;
-    const key = k.startsWith('--') ? k : `--${k}`;
-    out[key] = String(val);
-  }
-  return Object.keys(out).length ? out : undefined;
+declare const __BELLO_API_URL__: string;
+
+const API_BASE =
+  typeof __BELLO_API_URL__ !== 'undefined'
+    ? __BELLO_API_URL__
+    : 'https://api.heybello.dev';
+
+function getBaseUrl(opts: Pick<InitOptions, 'apiBaseUrl'>): string {
+  return (opts.apiBaseUrl ?? API_BASE).replace(/\/+$/, '');
 }
 
-export async function fetchPublicConfig(
+/**
+ * Fetch widget config from the server.
+ * Called on SDK init to get the latest config (theme, colors, titles, position).
+ */
+export async function fetchWidgetConfig(
   opts: InitOptions
 ): Promise<PublicConfig> {
-  const base = opts.apiBaseUrl ?? '';
+  const base = getBaseUrl(opts);
   const res = await fetch(
-    `${base}/api/projects/${encodeURIComponent(opts.projectId)}`,
+    `${base}/api/widget/config/${encodeURIComponent(opts.projectId)}?key=${encodeURIComponent(opts.widgetApiKey)}`,
     {
       method: 'GET',
       mode: 'cors',
@@ -32,47 +34,64 @@ export async function fetchPublicConfig(
   );
   if (!res.ok) throw new Error(`Config fetch failed: ${res.status}`);
 
-  const project = await res.json();
-  const wc =
-    project?.project?.widget_config ?? project?.widget_config ?? {};
-
-  const themeVars =
-    normalizeVars(wc.theme_vars) ||
-    normalizeVars(wc.themeVars) ||
-    normalizeVars(wc.css_vars) ||
-    undefined;
+  const wc = await res.json();
 
   return {
-    widgetTitle:
-      wc.widget_title ?? opts.widgetTitle ?? 'Chat with AI',
-    widgetButtonTitle:
-      wc.widget_button_title ??
-      opts.widgetButtonTitle ??
-      'Start chat',
-    orbStyle: wc.orb_style ?? opts.orbStyle ?? 'galaxy',
-    theme: wc.theme ?? opts.theme ?? 'dark',
-    position: wc.position ?? opts.position ?? 'bottom-right',
-    themeVars,
+    widgetTitle: wc.widget_title ?? 'Chat with AI',
+    widgetSubtitle: wc.widget_subtitle ?? 'Ask me anything',
+    widgetButtonTitle: wc.widget_button_title ?? 'Start chat',
+    accentColor: wc.accent_color ?? '#1FD5F9',
+    theme: wc.theme ?? 'dark',
+    position: wc.position ?? 'bottom-right',
   };
 }
 
+/**
+ * Fetch LiveKit connection details from the public widget token endpoint.
+ */
 export async function fetchConnectionDetails(
   opts: InitOptions
 ): Promise<ConnectionDetails> {
-  const base = opts.apiBaseUrl ?? '';
+  const base = getBaseUrl(opts);
   const res = await fetch(
-    `${base}/api/livekit/token/${encodeURIComponent(opts.projectId)}`,
+    `${base}/api/widget/livekit/token/${encodeURIComponent(opts.projectId)}`,
     {
       method: 'POST',
       mode: 'cors',
       credentials: 'omit',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ widget_api_key: opts.widgetApiKey }),
     }
   );
   if (!res.ok) throw new Error(`Token fetch failed: ${res.status}`);
   const j = await res.json();
   return {
-    serverUrl: j.serverUrl ?? j.livekit_url,
-    participantToken: j.participantToken ?? j.token,
+    serverUrl: j.livekit_url ?? j.serverUrl,
+    participantToken: j.token ?? j.participantToken,
+    sessionId: j.session_id ?? j.sessionId ?? '',
   };
+}
+
+/**
+ * Report session end. Fire-and-forget.
+ */
+export function endWidgetSession(
+  baseUrl: string,
+  sessionId: string
+): void {
+  if (!sessionId) return;
+  try {
+    fetch(
+      `${baseUrl.replace(/\/+$/, '')}/api/widget/sessions/${encodeURIComponent(sessionId)}/end`,
+      {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+      }
+    ).catch(() => {});
+  } catch {
+    // fire-and-forget
+  }
 }

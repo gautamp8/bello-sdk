@@ -1,108 +1,86 @@
 # Bello SDK
 
-Embed voice agents into any website in minutes.
-
-## Overview
-
-Bello SDK is a lightweight JavaScript library that enables you to integrate conversational voice agents into your web applications quickly and easily. Transform your website's user experience with natural voice interactions.
-
-**Supports multiple platforms:** HTML/JS, React, WordPress, and Shopify.
-
-## Features
-
-- **Multi-Platform Support** - Works with vanilla JS, React, WordPress, and Shopify
-- **Quick Integration** - Get started in minutes with minimal setup
-- **Voice-First Experience** - Natural conversation with your users
-- **Cross-Browser Support** - Works across all modern browsers
-- **Customizable UI** - Adapt the interface to match your brand
-- **Real-time Voice Processing** - Low-latency voice recognition and synthesis
-- **Event-Driven Architecture** - React to conversation events in your application
+Embed AI voice agents into any website in minutes.
 
 ## Install
 
 ```bash
-pnpm add @bello/bello-sdk
-# or
-npm install @bello/bello-sdk
+npm install @heybello/bello-sdk
 ```
 
-## CDN / HTML usage
+## HTML / Script Tag
+
+Add this before the closing `</body>` tag:
 
 ```html
 <script
-  src="https://unpkg.com/@bello/bello-sdk@latest/dist/bello-embed.iife.js"
+  src="https://unpkg.com/@heybello/bello-sdk@latest/dist/bello-embed.iife.js"
   defer
   data-project-id="YOUR_PROJECT_ID"
-  data-api-base-url="https://your-api.example.com"
-  data-position="bottom-right"
-  data-theme="dark"
-  data-orb-style="galaxy"
+  data-widget-api-key="YOUR_WIDGET_API_KEY"
 ></script>
 ```
 
-You can also initialize manually:
+The widget automatically loads your project's configuration (theme, colors, titles, voice) from the Bello dashboard.
+
+### Optional overrides
+
+Override dashboard settings with data attributes:
 
 ```html
-<script>
-  window.Bello = window.Bello || [];
-  window.Bello.push([
-    'init',
-    {
-      projectId: 'YOUR_PROJECT_ID',
-      apiBaseUrl: 'https://your-api.example.com',
-      position: 'bottom-right',
-      theme: 'dark',
-      orbStyle: 'galaxy'
-    }
-  ]);
-</script>
+<script
+  src="https://unpkg.com/@heybello/bello-sdk@latest/dist/bello-embed.iife.js"
+  defer
+  data-project-id="YOUR_PROJECT_ID"
+  data-widget-api-key="YOUR_WIDGET_API_KEY"
+  data-theme="light"
+  data-accent-color="#FF6B2C"
+  data-position="bottom-left"
+></script>
 ```
 
-## React / Next.js usage
+### Programmatic control
+
+```js
+window.Bello.push(['open']);   // Open the widget
+window.Bello.push(['close']);  // Close the widget
+window.Bello.push(['update', { theme: 'light' }]);
+```
+
+## React / Next.js
 
 ```tsx
-import { BelloWidget } from '@bello/bello-sdk/react';
+import { BelloWidget } from '@heybello/bello-sdk/react';
 
 export default function Page() {
   return (
     <BelloWidget
       projectId="YOUR_PROJECT_ID"
-      apiBaseUrl="https://your-api.example.com"
+      widgetApiKey="YOUR_WIDGET_API_KEY"
     />
   );
 }
 ```
 
-The React package bundles the widget directly and does not require a
-separate script tag.
+## Props / Attributes
 
-## Local development and testing
+| Prop | Data Attribute | Type | Required | Description |
+|------|---------------|------|----------|-------------|
+| `projectId` | `data-project-id` | `string` | Yes | Your Bello project ID |
+| `widgetApiKey` | `data-widget-api-key` | `string` | Yes | Widget API key from the Deploy step |
+| `theme` | `data-theme` | `'light' \| 'dark'` | No | Override theme |
+| `accentColor` | `data-accent-color` | `string` | No | Override accent color (hex) |
+| `position` | `data-position` | `'bottom-right' \| 'bottom-left' \| 'top-right' \| 'top-left'` | No | Override widget position |
+| `widgetTitle` | — | `string` | No | Override widget title |
+| `widgetSubtitle` | — | `string` | No | Override subtitle |
+| `widgetButtonTitle` | — | `string` | No | Override CTA button text |
+| `agentEnabled` | `data-agent-enabled` | `boolean` | No | Set `false` for UI-only preview |
 
-```bash
-pnpm install
-pnpm dev:iife
-```
+All optional props override your dashboard configuration. If omitted, dashboard settings are used.
 
-Open `http://localhost:5174/src/playground-embed.html` to test the CDN
-flow locally.
+## Getting your credentials
 
-### Build the npm package
-
-```bash
-pnpm build
-```
-
-Outputs:
-
-- `dist/bello-embed.iife.js` (CDN / IIFE)
-- `dist/react.es.js` and `dist/react.cjs` (frameworks)
-- `dist/*.d.ts` (types)
-
-### Test the package locally in another app
-
-```bash
-# from your consuming app
-pnpm add ../bello-sdk
-# or
-npm install ../bello-sdk
-```
+1. Create a project at [bello.ai](https://bello.ai)
+2. Configure your agent's voice, personality, and knowledge base
+3. Go to **Deploy** to get your `projectId` and `widgetApiKey`
+4. Paste the embed code into your site

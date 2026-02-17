@@ -34,15 +34,26 @@ try {
 
   const projectId =
     thisScript.getAttribute('data-project-id') || undefined;
+  const widgetApiKey =
+    thisScript.getAttribute('data-widget-api-key') || undefined;
+
+  if (!projectId) return;
+  if (!widgetApiKey) {
+    console.warn(
+      '[Bello] data-widget-api-key is required. Widget will not initialize.'
+    );
+    return;
+  }
+
+  // Optional overrides
   const apiBaseUrl =
     thisScript.getAttribute('data-api-base-url') || undefined;
   const position = thisScript.getAttribute('data-position') as
     | InitOptions['position']
     | null;
   const theme = thisScript.getAttribute('data-theme') as Theme | null;
-  const orbStyle = thisScript.getAttribute('data-orb-style') as
-    | InitOptions['orbStyle']
-    | null;
+  const accentColor =
+    thisScript.getAttribute('data-accent-color') || undefined;
   const agentEnabledAttr = thisScript.getAttribute(
     'data-agent-enabled'
   );
@@ -50,16 +61,15 @@ try {
     'data-voice-enabled'
   );
 
-  if (!projectId) return;
-
   g.Bello.push([
     'init',
     {
       projectId,
+      widgetApiKey,
       apiBaseUrl,
       position: position ?? undefined,
       theme: theme ?? undefined,
-      orbStyle: orbStyle ?? undefined,
+      accentColor,
       agentEnabled:
         agentEnabledAttr != null
           ? agentEnabledAttr !== 'false'

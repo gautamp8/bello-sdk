@@ -1,17 +1,8 @@
-export type OrbStyle =
-  | 'galaxy'
-  | 'ocean-depths'
-  | 'caribbean'
-  | 'cherry-blossom'
-  | 'emerald'
-  | 'multi-color'
-  | 'golden-glow'
-  | 'volcanic';
-
-export type Theme = 'light' | 'dark' | 'glass';
+export type Theme = 'light' | 'dark';
 
 export type InitOptions = {
   projectId: string;
+  widgetApiKey: string;
   apiBaseUrl?: string;
   position?:
     | 'bottom-right'
@@ -19,8 +10,9 @@ export type InitOptions = {
     | 'top-right'
     | 'top-left';
   theme?: Theme;
-  orbStyle?: OrbStyle;
+  accentColor?: string;
   widgetTitle?: string;
+  widgetSubtitle?: string;
   widgetButtonTitle?: string;
 
   /** Master switch: when false, no LiveKit connect (UI-only). Default: true */
@@ -35,8 +27,9 @@ export type InitOptions = {
 
 export type PublicConfig = {
   widgetTitle: string;
+  widgetSubtitle: string;
   widgetButtonTitle: string;
-  orbStyle: OrbStyle;
+  accentColor: string;
   theme: Theme;
   position: NonNullable<InitOptions['position']>;
   /** Server-provided CSS variables */
@@ -46,6 +39,7 @@ export type PublicConfig = {
 export type ConnectionDetails = {
   serverUrl: string;
   participantToken: string;
+  sessionId: string;
 };
 
 export type Cmd =
@@ -55,3 +49,17 @@ export type Cmd =
   | ['update', Partial<InitOptions>];
 
 export type BelloQueue = Cmd[] & { push?: (c: Cmd) => number };
+
+export type AgentRichMessage = {
+  id: string;
+  message: string;
+  url?: string | null;
+  timestamp: number;
+};
+
+export type InfoModalState = {
+  open: boolean;
+  fields: string[];
+  reason: string;
+  resolve: ((value: string) => void) | null;
+};

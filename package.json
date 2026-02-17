@@ -1,8 +1,8 @@
 {
-  "name": "@bello/bello-sdk",
+  "name": "@heybello/bello-sdk",
   "private": false,
   "description": "Bello SDK for embedding Bello in your applications",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "main": "dist/bello-embed.umd.cjs",
   "module": "dist/bello-embed.es.js",
@@ -11,7 +11,9 @@
   "files": [
     "dist"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/bello-embed.iife.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/types.d.ts",
@@ -37,14 +39,15 @@
     "build:types": "tsc -p tsconfig.build.json",
     "build": "rm -rf dist && pnpm build:embed && pnpm build:react && pnpm build:types"
   },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
+  },
   "dependencies": {
     "@livekit/components-react": "^2.9.14",
-    "framer-motion": "^12.23.12",
     "livekit-client": "^2.15.6",
-    "lucide": "^0.544.0",
-    "lucide-react": "^0.544.0",
+    "motion": "^12.23.12",
     "react": "^19.0.0",
-    "react-ai-orb": "^1.0.13",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {

@@ -1,313 +1,170 @@
 import {
+  useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import {
   RoomContext,
   RoomAudioRenderer,
   StartAudio,
-  BarVisualizer,
   useVoiceAssistant,
 } from '@livekit/components-react';
-import {
-  Orb,
-  galaxyPreset,
-  oceanDepthsPreset,
-  caribeanPreset,
-  cherryBlossomPreset,
-  emeraldPreset,
-  multiColorPreset,
-  goldenGlowPreset,
-  volcanicPreset,
-} from 'react-ai-orb';
-import { ChevronDown, Phone } from 'lucide-react'; // ← NEW
-import type { InitOptions, Theme } from '../types';
+import type { AgentState } from '@livekit/components-react';
+import type { Room } from 'livekit-client';
+import type { AgentRichMessage, InfoModalState, InitOptions, Theme } from '../types';
 import { useLiveKit } from './useLiveKit';
-import ChatInput from './ChatInput';
-import useChatAndTranscription from './useChatAndTranscription';
-import ChatEntry from './ChatEntry';
+import { AuraVisualizer } from './visualizer/AuraVisualizer';
+import { ControlBar } from './ControlBar';
+import { ChatTranscript } from './ChatTranscript';
+import { useCallingTone } from './useCallingTone';
+import { InfoCollectionModal } from './InfoCollectionModal';
+import { isSameDomain } from './domainUtils';
 
-function preset(style: string) {
-  switch (style) {
-    case 'ocean-depths':
-      return oceanDepthsPreset;
-    case 'caribbean':
-      return caribeanPreset;
-    case 'cherry-blossom':
-      return cherryBlossomPreset;
-    case 'emerald':
-      return emeraldPreset;
-    case 'multi-color':
-      return multiColorPreset;
-    case 'golden-glow':
-      return goldenGlowPreset;
-    case 'volcanic':
-      return volcanicPreset;
-    case 'galaxy':
-    default:
-      return galaxyPreset;
-  }
+/* ── Inline SVG Icons ── */
+
+const ChevronDownIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m6 9 6 6 6-6"/>
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v0Z"/>
+  </svg>
+);
+
+/* ── Helpers ── */
+
+function isAgentAvailable(agentState: AgentState) {
+  return (
+    agentState === 'listening' ||
+    agentState === 'thinking' ||
+    agentState === 'speaking'
+  );
 }
 
-export function BelloWidget({
+/* ── Inner popup content (inside RoomContext) ── */
+
+function PopupContent({
   opts,
-  theme,
-  onClose,
+  sessionStarted,
+  connected,
+  onDisconnect,
+  onError,
+  agentMessages,
 }: {
   opts: InitOptions;
-  theme: Theme;
-  onClose: () => void;
+  sessionStarted: boolean;
+  connected: boolean;
+  onDisconnect: () => void;
+  onError: (msg: string) => void;
+  agentMessages: AgentRichMessage[];
 }) {
-  const [open, setOpen] = useState(false);
+  const { state: agentState, audioTrack: agentAudioTrack } =
+    useVoiceAssistant();
 
-  // switches (default true if undefined)
-  const agentOn = opts.agentEnabled !== false;
-  const voiceOn = opts.voiceEnabled !== false;
+  const theme = opts.theme ?? 'dark';
+  const auraThemeMode = theme === 'light' ? 'light' : 'dark';
+  const auraColor = opts.accentColor || '#1FD5F9';
 
-  // only connect when widget is open AND agent is enabled
-  const { room, error, setError, connecting, connected } = useLiveKit(
-    opts,
-    open && agentOn
-  );
+  const isConnecting =
+    sessionStarted &&
+    !isAgentAvailable(agentState) &&
+    agentState !== 'disconnected';
 
-  // Programmatic open/close support
+  // Calling tone while connecting
+  useCallingTone(isConnecting);
+
+  // Agent timeout: if not available after 10s, show error
+  const timedOutRef = useRef(false);
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      const t = detail?.type;
-      if (t === 'open') setOpen(true);
-      if (t === 'close') {
-        setOpen(false);
-        onClose();
+    if (!sessionStarted) return;
+
+    const timeout = setTimeout(() => {
+      if (!isAgentAvailable(agentState) && !timedOutRef.current) {
+        timedOutRef.current = true;
+        onError(
+          agentState === 'connecting'
+            ? 'Agent did not join the room.'
+            : 'Agent connected but did not complete initializing.'
+        );
+        onDisconnect();
       }
-    };
-    window.addEventListener('bello:event', handler as any);
-    return () =>
-      window.removeEventListener('bello:event', handler as any);
-  }, [onClose]);
+    }, 10_000);
 
-  const cfg = useMemo(
-    () => ({
-      title: opts.widgetTitle ?? 'Need support?',
-      cta: opts.widgetButtonTitle ?? 'Chat with AI',
-      pos: opts.position ?? 'bottom-right',
-      orb: opts.orbStyle ?? 'galaxy',
-    }),
-    [opts]
-  );
-
-  const cls =
-    theme === 'dark'
-      ? 'theme-dark'
-      : theme === 'glass'
-      ? 'theme-glass'
-      : 'theme-light';
-
-  const collapse = () => {
-    setOpen(false);
-    onClose(); // triggers LiveKit cleanup (enabled becomes false)
-  };
+    return () => clearTimeout(timeout);
+  }, [agentState, sessionStarted, onDisconnect, onError]);
 
   return (
-    <div className={cls}>
-      {/* Launcher (closed) */}
-      {!open && (
-        <div className="bello-container bello-row">
-          <div className="px-3">
-            <Orb
-              {...preset(cfg.orb)}
-              size={0.7}
-              animationSpeedBase={1}
-              animationSpeedHue={1}
-              mainOrbHueAnimation
+    <>
+      <RoomAudioRenderer />
+      <StartAudio label="Start Audio" />
+      <AgentAudioEnsurePlay />
+
+      {/* Header */}
+      <div className="bello-header">
+        <div className="bello-row">
+          <div className="bello-header-aura">
+            <AuraVisualizer
+              size="sm"
+              state={agentState}
+              audioTrack={agentAudioTrack}
+              themeMode={auraThemeMode}
+              color={auraColor}
             />
           </div>
-          <div className="bello-title-container">
-            <div className="bello-hero">{cfg.title}</div>
-            <button
-              className="bello-trigger"
-              onClick={() => setOpen(true)}
-            >
-              {cfg.cta}
-            </button>
+          <div className="bello-header-text">
+            <div className="bello-title">
+              {opts.widgetTitle ?? 'Voice Assistant'}
+            </div>
+            <div className="bello-subtitle">
+              {opts.widgetSubtitle ?? 'Ask me anything'}
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Widget (open) */}
-      <motion.div
-        className="bello-pop"
-        data-pos={cfg.pos}
-        initial={false}
-        animate={{
-          opacity: open ? 1 : 0,
-          scale: open ? 1 : 0.98,
-          y: open ? 0 : 6,
-          pointerEvents: open ? 'auto' : 'none',
-        }}
-      >
-        <div className="bello-card bello-body">
-          {/* Header with END button */}
-          <div className="bello-header">
-            <div className="bello-row">
-              <div className="pl-2">
-                <Orb
-                  {...preset(cfg.orb)}
-                  size={0.5}
-                  animationSpeedBase={1}
-                  animationSpeedHue={1}
-                  mainOrbHueAnimation
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="bello-title">{cfg.title}</div>
-                <div className="bello-subtitle">
-                  {agentOn
-                    ? 'Voice & text assistant'
-                    : 'UI preview (agent off)'}
-                </div>
+      {/* Content */}
+      <div className="bello-main">
+        {/* Connecting overlay */}
+        {isConnecting && (
+          <div className="bello-connecting-overlay">
+            <div className="bello-connecting-aura">
+              <AuraVisualizer
+                size="md"
+                state={agentState}
+                themeMode={auraThemeMode}
+                color={auraColor}
+              />
+              <div className="bello-connecting-icon">
+                <PhoneIcon />
               </div>
             </div>
-            <button
-              className="bello-trigger-danger small"
-              onClick={collapse}
-              aria-label="End session"
-              title="End"
-            >
-              <Phone size={14} />
-              End
-            </button>
+            <p className="bello-connecting-text">Connecting...</p>
           </div>
+        )}
 
-          {/* Body + Footer */}
-          {error ? (
-            <div className="bello-main">
-              <div className="bello-error">
-                <div className="bello-error-title">Error</div>
-                <div className="bello-error-text">{error}</div>
-                <button
-                  className="bello-trigger small mt"
-                  onClick={() => setError(null)}
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ) : agentOn ? (
-            <RoomContext.Provider value={room}>
-              <div className="bello-main">
-                {voiceOn && (
-                  <>
-                    <RoomAudioRenderer />
-                    <StartAudio label="Start Audio" />
-                    <AgentAudioEnsurePlay />
-                  </>
-                )}
-                <TopStatus
-                  connecting={connecting}
-                  connected={connected}
-                  voiceOn={voiceOn}
-                />
-                <ChatRegion />
-              </div>
+        {/* Chat Transcript */}
+        <ChatTranscript agentState={agentState} agentMessages={agentMessages} />
+      </div>
 
-              {/* FOOTER: chat input + send */}
-              <div className="bello-footer">
-                <FooterInput connected={connected} />
-              </div>
-            </RoomContext.Provider>
-          ) : (
-            <>
-              <div className="bello-main">
-                <div className="center">
-                  <p className="status">
-                    UI preview · Agent disabled
-                  </p>
-                </div>
-                <div className="chat-wrap">
-                  <ol className="chat-list" aria-live="polite">
-                    <li className="chat-entry them">
-                      <div className="chat-name">Agent</div>
-                      <div className="chat-bubble them">
-                        <span className="chat-text">
-                          Hi! This is UI-only mode.
-                        </span>
-                        <span className="chat-time">—</span>
-                      </div>
-                    </li>
-                  </ol>
-                </div>
-              </div>
-              <div className="bello-footer">
-                <ChatInput disabled onSend={() => {}} />
-              </div>
-            </>
-          )}
-        </div>
-      </motion.div>
-
-      {/* FAB chevron — visible only when open (bottom corner) */}
-      {open && (
-        <button
-          className="bello-fab"
-          onClick={collapse}
-          aria-label="Collapse widget"
-          title="Collapse"
-        >
-          <ChevronDown size={20} />
-        </button>
-      )}
-    </div>
+      {/* Footer: Control Bar */}
+      <div className="bello-footer">
+        <ControlBar
+          isConnected={connected}
+          onDisconnect={onDisconnect}
+        />
+      </div>
+    </>
   );
 }
 
-/** Small status block above chat */
-function TopStatus({
-  connecting,
-  connected,
-  voiceOn = true,
-}: {
-  connecting: boolean;
-  connected: boolean;
-  voiceOn?: boolean;
-}) {
-  const { state: agentState, audioTrack } = useVoiceAssistant();
+/* ── Ensure agent audio plays if auto-attach fails ── */
 
-  return (
-    <div className="center">
-      {voiceOn && (
-        <BarVisualizer
-          barCount={5}
-          options={{ minHeight: 6 }}
-          className="bars"
-          trackRef={audioTrack}
-          state={agentState}
-        >
-          <span className="bar" />
-        </BarVisualizer>
-      )}
-      <p className="status">
-        {connecting && 'Connecting…'}
-        {!connecting &&
-          connected &&
-          (agentState === 'speaking'
-            ? 'Agent speaking…'
-            : agentState === 'listening'
-            ? 'Agent listening…'
-            : agentState === 'thinking'
-            ? 'Agent thinking…'
-            : 'Connected')}
-        {!connecting && !connected && 'Ready'}
-      </p>
-    </div>
-  );
-}
-
-/** Ensure agent audio plays if auto-attach fails. */
 function AgentAudioEnsurePlay() {
   const { audioTrack } = useVoiceAssistant();
 
@@ -349,98 +206,278 @@ function AgentAudioEnsurePlay() {
   return null;
 }
 
-/** Messages only (no input here anymore) */
+/* ── Main Widget Component ── */
 
-function ChatRegion() {
-  const { messages, revision } = useChatAndTranscription();
+export function BelloWidget({
+  opts,
+  theme,
+  onClose,
+}: {
+  opts: InitOptions;
+  theme: Theme;
+  onClose: () => void;
+}) {
+  const [open, setOpen] = useState(false);
 
-  // The <ol> that renders messages
-  const listRef = useRef<HTMLOListElement>(null);
-  // Invisible element at the end we can scroll to
-  const endRef = useRef<HTMLDivElement>(null);
-  // Whether we should keep snapping to the bottom
-  const stickRef = useRef(true);
+  // Animation guard: prevent rapid open/close race conditions
+  const isAnimatingRef = useRef(false);
 
-  // Track if the user manually scrolled up; if so, don't auto-stick until they return near the bottom
-  useEffect(() => {
-    // Try the nearest scrollable ancestor; if none, the list itself
-    const listEl = listRef.current;
-    if (!listEl) return;
+  // Agent rich messages (sent via RPC, displayed in chat)
+  const [agentMessages, setAgentMessages] = useState<AgentRichMessage[]>([]);
 
-    // Find the actual scrolling container (bubbles often sit inside a parent with overflow)
-    const scroller =
-      (listEl.closest(
-        '.chat-wrap, .bello-main, .scroll-container'
-      ) as HTMLElement) ||
-      (listEl.parentElement as HTMLElement) ||
-      (listEl as HTMLElement);
+  // Info collection modal state
+  const [infoModal, setInfoModal] = useState<InfoModalState>({
+    open: false,
+    fields: [],
+    reason: '',
+    resolve: null,
+  });
 
-    const onScroll = () => {
-      const nearBottom =
-        scroller.scrollHeight -
-          scroller.scrollTop -
-          scroller.clientHeight <
-        80; // px threshold
-      stickRef.current = nearBottom;
-    };
+  const agentOn = opts.agentEnabled !== false;
+  const auraColor = opts.accentColor || '#1FD5F9';
+  const auraThemeMode = theme === 'light' ? 'light' : 'dark';
 
-    scroller.addEventListener('scroll', onScroll, { passive: true });
-    // initialize
-    onScroll();
+  const { room, error, setError, connecting, connected } = useLiveKit(
+    opts,
+    open && agentOn
+  );
 
-    return () => scroller.removeEventListener('scroll', onScroll);
+  const guardedToggle = useCallback((nextOpen: boolean) => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
+    setOpen(nextOpen);
+    setTimeout(() => {
+      isAnimatingRef.current = false;
+    }, 350);
   }, []);
 
-  // Auto-scroll when:
-  //  - revision changes (partial → text changed)
-  //  - a new message is appended (length)
-  //  - the last message id or text changes
-  useLayoutEffect(() => {
-    if (!stickRef.current) return;
-    // wait for DOM paint so heights are correct
-    requestAnimationFrame(() => {
-      endRef.current?.scrollIntoView({
-        block: 'end',
-        inline: 'nearest',
-        behavior: 'auto',
-      });
-    });
-  }, [
-    revision,
-    messages.length,
-    messages[messages.length - 1]?.id,
-    messages[messages.length - 1]?.message,
-  ]);
+  // Programmatic open/close support
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const t = detail?.type;
+      if (t === 'open') guardedToggle(true);
+      if (t === 'close') {
+        guardedToggle(false);
+        onClose();
+      }
+    };
+    window.addEventListener('bello:event', handler as any);
+    return () =>
+      window.removeEventListener('bello:event', handler as any);
+  }, [onClose, guardedToggle]);
 
-  return (
-    <div className="chat-wrap">
-      <ol ref={listRef} className="chat-list" aria-live="polite">
-        {messages.map((m) => (
-          <ChatEntry key={m.id} entry={m} />
-        ))}
-        {/* sentinel */}
-        <li aria-hidden="true">
-          <div ref={endRef} />
-        </li>
-      </ol>
-      {/* your footer input stays outside this component if you moved it */}
-    </div>
+  const cfg = useMemo(
+    () => ({
+      title: opts.widgetTitle ?? 'Need support?',
+      cta: opts.widgetButtonTitle ?? 'Start chat',
+      pos: opts.position ?? 'bottom-right',
+    }),
+    [opts]
   );
-}
 
-export default ChatRegion;
+  const cls = theme === 'dark' ? 'theme-dark' : 'theme-light';
 
-/** Footer input that sends via data channel when connected */
-function FooterInput({ connected }: { connected: boolean }) {
-  const { send } = useChatAndTranscription();
+  const collapse = useCallback(() => {
+    setOpen(false);
+    setAgentMessages([]);
+    setInfoModal({ open: false, fields: [], reason: '', resolve: null });
+    onClose();
+  }, [onClose]);
+
+  // ------------------------------------------------------------------
+  // Register RPC handlers for agent client tools
+  // ------------------------------------------------------------------
+  const registerRpcHandlers = useCallback(
+    (localRoom: Room) => {
+      const lp = localRoom.localParticipant;
+
+      // Navigate to URL (new tab, same-domain only)
+      lp.registerRpcMethod('client.navigate', async (data) => {
+        const { url } = JSON.parse(data.payload);
+        if (!isSameDomain(window.location.hostname, url)) {
+          throw new Error('Navigation blocked: URL is not on the same domain');
+        }
+        window.open(url, '_blank', 'noopener,noreferrer');
+        return JSON.stringify({ success: true });
+      });
+
+      // Show a rich message / link in the chat
+      lp.registerRpcMethod('client.showMessage', async (data) => {
+        const { message, url } = JSON.parse(data.payload);
+        setAgentMessages((prev) => [
+          ...prev,
+          {
+            id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            message,
+            url,
+            timestamp: Date.now(),
+          },
+        ]);
+        return JSON.stringify({ success: true });
+      });
+
+      // Collect user info via modal
+      lp.registerRpcMethod('client.collectInfo', async (data) => {
+        const { fields, reason } = JSON.parse(data.payload);
+        const result = await new Promise<string>((resolve) => {
+          setInfoModal({ open: true, fields, reason, resolve });
+        });
+        return result;
+      });
+
+      // Copy text to clipboard
+      lp.registerRpcMethod('client.copyToClipboard', async (data) => {
+        const { text } = JSON.parse(data.payload);
+        try {
+          await navigator.clipboard.writeText(text);
+          return JSON.stringify({ success: true });
+        } catch {
+          return JSON.stringify({ error: 'Clipboard access denied' });
+        }
+      });
+    },
+    [],
+  );
+
+  // Register RPC handlers when connected
+  useEffect(() => {
+    if (connected && room) {
+      registerRpcHandlers(room);
+    }
+  }, [connected, room, registerRpcHandlers]);
+
+  // ------------------------------------------------------------------
+  // Info modal handlers
+  // ------------------------------------------------------------------
+  const handleInfoSubmit = useCallback(
+    (data: Record<string, string>) => {
+      infoModal.resolve?.(JSON.stringify(data));
+      setInfoModal({ open: false, fields: [], reason: '', resolve: null });
+    },
+    [infoModal],
+  );
+
+  const handleInfoDismiss = useCallback(() => {
+    infoModal.resolve?.(JSON.stringify({ dismissed: true }));
+    setInfoModal({ open: false, fields: [], reason: '', resolve: null });
+  }, [infoModal]);
+
   return (
-    <ChatInput
-      disabled={!connected}
-      onSend={(txt) => {
-        const t = txt.trim();
-        if (!t) return;
-        send(t);
-      }}
-    />
+    <div className={cls}>
+      {/* Launcher (closed) */}
+      {!open && (
+        <div className="bello-container bello-row">
+          <div className="bello-launcher-aura">
+            <AuraVisualizer
+              size="sm"
+              state="disconnected"
+              themeMode={auraThemeMode}
+              color={auraColor}
+            />
+          </div>
+          <div className="bello-title-container">
+            <div className="bello-hero">{cfg.title}</div>
+            <button
+              className="bello-trigger"
+              onClick={() => guardedToggle(true)}
+            >
+              {cfg.cta}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Widget (open) */}
+      <motion.div
+        className="bello-pop"
+        data-pos={cfg.pos}
+        initial={false}
+        animate={{
+          opacity: open ? 1 : 0,
+          scale: open ? 1 : 0.98,
+          y: open ? 0 : 6,
+          pointerEvents: open ? 'auto' : 'none',
+        }}
+      >
+        <div className="bello-card bello-body">
+          {error ? (
+            <>
+              <div className="bello-header">
+                <div className="bello-row">
+                  <div className="bello-header-text">
+                    <div className="bello-title">{cfg.title}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="bello-main">
+                <div className="bello-error">
+                  <div className="bello-error-title">Error</div>
+                  <div className="bello-error-text">{error}</div>
+                  <button
+                    className="bello-trigger small mt"
+                    onClick={() => setError(null)}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : agentOn ? (
+            <RoomContext.Provider value={room}>
+              <PopupContent
+                opts={opts}
+                sessionStarted={connecting || connected}
+                connected={connected}
+                onDisconnect={collapse}
+                onError={(msg) => setError(msg)}
+                agentMessages={agentMessages}
+              />
+            </RoomContext.Provider>
+          ) : (
+            <>
+              <div className="bello-header">
+                <div className="bello-row">
+                  <div className="bello-header-text">
+                    <div className="bello-title">{cfg.title}</div>
+                    <div className="bello-subtitle">
+                      UI preview - Agent disabled
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bello-main">
+                <div className="center">
+                  <p className="status">
+                    UI preview - Agent disabled
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Info collection modal — rendered inside the card body */}
+          <InfoCollectionModal
+            open={infoModal.open}
+            fields={infoModal.fields}
+            reason={infoModal.reason}
+            onSubmit={handleInfoSubmit}
+            onDismiss={handleInfoDismiss}
+          />
+        </div>
+      </motion.div>
+
+      {/* FAB chevron — visible only when open */}
+      {open && (
+        <button
+          className="bello-fab"
+          onClick={collapse}
+          aria-label="Collapse widget"
+          title="Collapse"
+        >
+          <ChevronDownIcon />
+        </button>
+      )}
+    </div>
   );
 }
