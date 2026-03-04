@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
-    <title>Bello SDK Get Started</title>
+    <title>Bello SDK HTML + JavaScript</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       rel="preconnect"
@@ -370,23 +370,23 @@
     <main class="page">
       <header class="hero fade-up">
         <div>
-          <span class="badge">Bello SDK</span>
-          <h1>Embed voice agents in minutes.</h1>
+          <span class="badge">HTML + JavaScript</span>
+          <h1>Ship Bello in one script tag.</h1>
           <p>
-            Drop in the script, tune the look with CSS variables, and
-            control the widget from JavaScript when you need it.
+            Embed the Bello SDK on any site with a lightweight script,
+            then tune the visuals with CSS variables or the JS API.
           </p>
           <div class="hero-actions">
             <button class="btn primary" data-copy="html">
               Copy HTML
             </button>
-            <a class="btn ghost" href="#start">
-              See setup steps
+            <a class="btn ghost" href="docs-npm.html">
+              View npm docs
             </a>
           </div>
         </div>
         <div class="surface hero-card">
-          <h3>Demo config</h3>
+          <h3>Live config</h3>
           <dl class="config-grid">
             <div class="config-item">
               <dt>Project ID</dt>
@@ -432,19 +432,19 @@
               </button>
               <button
                 class="tab-btn"
-                data-tab="css"
-                role="tab"
-                aria-selected="false"
-              >
-                CSS
-              </button>
-              <button
-                class="tab-btn"
                 data-tab="js"
                 role="tab"
                 aria-selected="false"
               >
                 JavaScript
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="css"
+                role="tab"
+                aria-selected="false"
+              >
+                CSS
               </button>
             </div>
             <div class="tab-panel active" data-panel="html">
@@ -458,6 +458,17 @@
                 <pre><code data-code="html"></code></pre>
               </div>
             </div>
+            <div class="tab-panel" data-panel="js">
+              <div class="code-block">
+                <div class="code-header">
+                  <span>JavaScript Init</span>
+                  <button class="copy-btn" data-copy="js">
+                    Copy code
+                  </button>
+                </div>
+                <pre><code data-code="js"></code></pre>
+              </div>
+            </div>
             <div class="tab-panel" data-panel="css">
               <div class="code-block">
                 <div class="code-header">
@@ -469,20 +480,9 @@
                 <pre><code data-code="css"></code></pre>
               </div>
             </div>
-            <div class="tab-panel" data-panel="js">
-              <div class="code-block">
-                <div class="code-header">
-                  <span>JavaScript API</span>
-                  <button class="copy-btn" data-copy="js">
-                    Copy code
-                  </button>
-                </div>
-                <pre><code data-code="js"></code></pre>
-              </div>
-            </div>
             <p class="note">
-              Place the HTML snippet before `&lt;/body&gt;` and replace the
-              project ID and API base URL with your own values.
+              Place the HTML snippet before `&lt;/body&gt;` and replace
+              the project ID and API base URL with your own values.
             </p>
           </div>
           <div class="grid">
@@ -495,16 +495,19 @@
               </ol>
             </div>
             <div class="surface">
-              <h3>Configuration highlights</h3>
+              <h3>Important attributes</h3>
               <p class="note">
-                Choose a theme, orb style, and position. Use the
-                JavaScript API to open, close, or update settings at
-                runtime.
+                These data attributes map directly to the JavaScript
+                options when you call `Bello.push(['init', ...])`.
               </p>
               <div class="pill-row">
-                <span class="pill">Themes: dark, light, glass</span>
-                <span class="pill">Positions: 4 corners</span>
-                <span class="pill">Orbs: 8 styles</span>
+                <span class="pill">data-project-id (required)</span>
+                <span class="pill">data-api-base-url</span>
+                <span class="pill">data-position</span>
+                <span class="pill">data-theme</span>
+                <span class="pill">data-orb-style</span>
+                <span class="pill">data-agent-enabled</span>
+                <span class="pill">data-voice-enabled</span>
               </div>
             </div>
           </div>
@@ -512,13 +515,26 @@
       </section>
 
       <section class="section fade-up">
-        <div class="surface">
-          <h3>Need the full reference?</h3>
-          <p class="note">
-            Check `docs/html/README.md` for a complete HTML, CSS, and
-            JavaScript guide including option tables and theming
-            variables.
-          </p>
+        <div class="grid two">
+          <div class="surface">
+            <h3>Programmatic controls</h3>
+            <p class="note">
+              Queue commands any time to control the widget. Use
+              `update` to change options without reloading.
+            </p>
+            <div class="pill-row">
+              <span class="pill">Bello.push(['open'])</span>
+              <span class="pill">Bello.push(['close'])</span>
+              <span class="pill">Bello.push(['update', {...}])</span>
+            </div>
+          </div>
+          <div class="surface">
+            <h3>Need the full reference?</h3>
+            <p class="note">
+              View `docs/html/README.md` for a complete list of options
+              and theme variables.
+            </p>
+          </div>
         </div>
       </section>
     </main>
@@ -548,28 +564,17 @@
         html: [
           '<!-- Bello SDK embed -->',
           '<script',
-          '  src=\"https://unpkg.com/@heybello/bello-sdk@latest/dist/bello-embed.iife.js\"',
+          '  src="https://unpkg.com/@heybello/bello-sdk@latest/dist/bello-embed.iife.js"',
           '  defer',
-          `  data-project-id=\"${sampleConfig.projectId}\"`,
-          `  data-api-base-url=\"${sampleConfig.apiBaseUrl}\"`,
-          `  data-position=\"${sampleConfig.position}\"`,
-          `  data-theme=\"${sampleConfig.theme}\"`,
-          `  data-orb-style=\"${sampleConfig.orbStyle}\"`,
-          `  data-agent-enabled=\"${sampleConfig.agentEnabled}\"`,
-          `  data-voice-enabled=\"${sampleConfig.voiceEnabled}\"`,
+          `  data-project-id="${sampleConfig.projectId}"`,
+          `  data-api-base-url="${sampleConfig.apiBaseUrl}"`,
+          `  data-position="${sampleConfig.position}"`,
+          `  data-theme="${sampleConfig.theme}"`,
+          `  data-orb-style="${sampleConfig.orbStyle}"`,
+          `  data-agent-enabled="${sampleConfig.agentEnabled}"`,
+          `  data-voice-enabled="${sampleConfig.voiceEnabled}"`,
           '></scr' + 'ipt>',
         ].join('\n'),
-        css: `#bello-widget-root {
-  --bello-bg: #0b0f1a;
-  --bello-fg: #f8fafc;
-  --bello-surface: #0f172a;
-  --bello-border: rgba(148, 163, 184, 0.3);
-  --bello-cta-bg: #14b8a6;
-  --bello-cta-fg: #0f172a;
-  --bello-radius: 16px;
-  --bello-width: 420px;
-  --bello-height: 520px;
-}`.trim(),
         js: `window.Bello = window.Bello || [];
 window.Bello.push([
   'init',
@@ -587,6 +592,17 @@ window.Bello.push([
 window.Bello.push(['open']);
 // window.Bello.push(['update', { theme: 'light' }]);
 // window.Bello.push(['close']);`.trim(),
+        css: `#bello-widget-root {
+  --bello-bg: #0b0f1a;
+  --bello-fg: #f8fafc;
+  --bello-surface: #0f172a;
+  --bello-border: rgba(148, 163, 184, 0.3);
+  --bello-cta-bg: #14b8a6;
+  --bello-cta-fg: #0f172a;
+  --bello-radius: 16px;
+  --bello-width: 420px;
+  --bello-height: 520px;
+}`.trim(),
       };
 
       const setConfigValues = () => {
@@ -664,31 +680,10 @@ window.Bello.push(['open']);
         });
       };
 
-      const loadWidget = () => {
-        const script = document.createElement('script');
-        script.src = '/dist/bello-embed.iife.js';
-        script.defer = true;
-        script.setAttribute('data-project-id', liveConfig.projectId);
-        script.setAttribute('data-api-base-url', liveConfig.apiBaseUrl);
-        script.setAttribute('data-position', liveConfig.position);
-        script.setAttribute('data-theme', liveConfig.theme);
-        script.setAttribute('data-orb-style', liveConfig.orbStyle);
-        script.setAttribute(
-          'data-agent-enabled',
-          String(liveConfig.agentEnabled)
-        );
-        script.setAttribute(
-          'data-voice-enabled',
-          String(liveConfig.voiceEnabled)
-        );
-        document.body.appendChild(script);
-      };
-
       setConfigValues();
       setCodeBlocks();
       bindCopyButtons();
       bindTabs();
-      loadWidget();
     </script>
   </body>
 </html>

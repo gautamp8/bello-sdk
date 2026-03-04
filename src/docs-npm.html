@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
-    <title>Bello SDK Get Started</title>
+    <title>Bello SDK npm</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       rel="preconnect"
@@ -370,73 +370,73 @@
     <main class="page">
       <header class="hero fade-up">
         <div>
-          <span class="badge">Bello SDK</span>
-          <h1>Embed voice agents in minutes.</h1>
+          <span class="badge">npm package</span>
+          <h1>Use Bello with React or bundlers.</h1>
           <p>
-            Drop in the script, tune the look with CSS variables, and
-            control the widget from JavaScript when you need it.
+            Install the npm package, render the React widget, or load
+            the embed bundle inside your own JavaScript setup.
           </p>
           <div class="hero-actions">
-            <button class="btn primary" data-copy="html">
-              Copy HTML
+            <button class="btn primary" data-copy="install">
+              Copy install
             </button>
-            <a class="btn ghost" href="#start">
-              See setup steps
+            <a class="btn ghost" href="docs-html.html">
+              View HTML docs
             </a>
           </div>
         </div>
         <div class="surface hero-card">
-          <h3>Demo config</h3>
+          <h3>Package info</h3>
           <dl class="config-grid">
             <div class="config-item">
-              <dt>Project ID</dt>
-              <dd data-config="projectId"></dd>
+              <dt>Package</dt>
+              <dd data-config="package"></dd>
             </div>
             <div class="config-item">
-              <dt>API Base URL</dt>
-              <dd data-config="apiBaseUrl"></dd>
+              <dt>React Export</dt>
+              <dd data-config="react"></dd>
             </div>
             <div class="config-item">
-              <dt>Position</dt>
-              <dd data-config="position"></dd>
+              <dt>Bundle</dt>
+              <dd data-config="bundle"></dd>
             </div>
             <div class="config-item">
-              <dt>Theme</dt>
-              <dd data-config="theme"></dd>
+              <dt>Types</dt>
+              <dd data-config="types"></dd>
             </div>
             <div class="config-item">
-              <dt>Orb Style</dt>
-              <dd data-config="orbStyle"></dd>
+              <dt>Version</dt>
+              <dd data-config="version"></dd>
             </div>
           </dl>
           <div class="pill-row">
-            <span class="pill">Agent enabled</span>
-            <span class="pill">Voice enabled</span>
-            <span class="pill">Shadow DOM safe</span>
+            <span class="pill">React + Next.js</span>
+            <span class="pill">ESM + IIFE</span>
+            <span class="pill">TypeScript ready</span>
           </div>
         </div>
       </header>
 
       <section class="section fade-up" id="start">
-        <div class="section-title">Get started</div>
+        <div class="section-title">Get started with npm</div>
         <div class="grid two">
           <div class="surface">
             <div class="tab-row" role="tablist">
               <button
                 class="tab-btn"
-                data-tab="html"
+                data-tab="install"
                 role="tab"
                 aria-selected="true"
               >
-                HTML
+                Install
               </button>
               <button
                 class="tab-btn"
-                data-tab="css"
+                data-tab="react"
                 role="tab"
                 aria-selected="false"
               >
-                CSS
+                React
               </button>
               <button
                 class="tab-btn"
@@ -447,32 +447,32 @@
                 JavaScript
               </button>
             </div>
-            <div class="tab-panel active" data-panel="html">
+            <div class="tab-panel active" data-panel="install">
               <div class="code-block">
                 <div class="code-header">
-                  <span>Embed Script</span>
-                  <button class="copy-btn" data-copy="html">
+                  <span>Install</span>
+                  <button class="copy-btn" data-copy="install">
                     Copy code
                   </button>
                 </div>
-                <pre><code data-code="html"></code></pre>
+                <pre><code data-code="install"></code></pre>
               </div>
             </div>
-            <div class="tab-panel" data-panel="css">
+            <div class="tab-panel" data-panel="react">
               <div class="code-block">
                 <div class="code-header">
-                  <span>Theme Overrides</span>
-                  <button class="copy-btn" data-copy="css">
+                  <span>React Widget</span>
+                  <button class="copy-btn" data-copy="react">
                     Copy code
                   </button>
                 </div>
-                <pre><code data-code="css"></code></pre>
+                <pre><code data-code="react"></code></pre>
               </div>
             </div>
             <div class="tab-panel" data-panel="js">
               <div class="code-block">
                 <div class="code-header">
-                  <span>JavaScript API</span>
+                  <span>JavaScript Bundle</span>
                   <button class="copy-btn" data-copy="js">
                     Copy code
                   </button>
@@ -481,30 +481,29 @@
               </div>
             </div>
             <p class="note">
-              Place the HTML snippet before `&lt;/body&gt;` and replace the
-              project ID and API base URL with your own values.
+              Use the React export for Next.js and React apps. For
+              other setups, import the IIFE bundle and call
+              `Bello.push(['init', ...])`.
             </p>
           </div>
           <div class="grid">
             <div class="surface">
               <h3>Installation checklist</h3>
               <ol class="steps">
-                <li>Copy the HTML snippet for the embed script.</li>
-                <li>Paste it before the closing `&lt;/body&gt;` tag.</li>
-                <li>Reload the page and click the Bello launcher.</li>
+                <li>Install the package from npm.</li>
+                <li>Pick React or the JS bundle integration.</li>
+                <li>Provide your project ID and API base URL.</li>
               </ol>
             </div>
             <div class="surface">
-              <h3>Configuration highlights</h3>
+              <h3>Runtime controls</h3>
               <p class="note">
-                Choose a theme, orb style, and position. Use the
-                JavaScript API to open, close, or update settings at
-                runtime.
+                These commands work the same across React and JS.
               </p>
               <div class="pill-row">
-                <span class="pill">Themes: dark, light, glass</span>
-                <span class="pill">Positions: 4 corners</span>
-                <span class="pill">Orbs: 8 styles</span>
+                <span class="pill">Bello.push(['open'])</span>
+                <span class="pill">Bello.push(['close'])</span>
+                <span class="pill">Bello.push(['update', {...}])</span>
               </div>
             </div>
           </div>
@@ -512,81 +511,78 @@
       </section>
 
       <section class="section fade-up">
-        <div class="surface">
-          <h3>Need the full reference?</h3>
-          <p class="note">
-            Check `docs/html/README.md` for a complete HTML, CSS, and
-            JavaScript guide including option tables and theming
-            variables.
-          </p>
+        <div class="grid two">
+          <div class="surface">
+            <h3>Configuration options</h3>
+            <p class="note">
+              `projectId` is required. All other options are optional
+              and can be updated at runtime.
+            </p>
+            <div class="pill-row">
+              <span class="pill">position</span>
+              <span class="pill">theme</span>
+              <span class="pill">orbStyle</span>
+              <span class="pill">widgetTitle</span>
+              <span class="pill">widgetButtonTitle</span>
+              <span class="pill">agentEnabled</span>
+              <span class="pill">voiceEnabled</span>
+              <span class="pill">themeVars</span>
+            </div>
+          </div>
+          <div class="surface">
+            <h3>Need the full reference?</h3>
+            <p class="note">
+              See `docs/npm/README.md` for the full option list and
+              examples.
+            </p>
+          </div>
         </div>
       </section>
     </main>
 
     <script>
-      const liveConfig = {
-        projectId: '60426d20-f02a-4085-968c-d6604ed5adca',
-        apiBaseUrl: 'http://localhost:3001',
-        position: 'bottom-right',
-        theme: 'dark',
-        orbStyle: 'galaxy',
-        agentEnabled: true,
-        voiceEnabled: true,
-      };
-
-      const sampleConfig = {
-        projectId: 'YOUR_PROJECT_ID',
-        apiBaseUrl: 'https://your-api.example.com',
-        position: 'bottom-right',
-        theme: 'dark',
-        orbStyle: 'galaxy',
-        agentEnabled: true,
-        voiceEnabled: true,
+      const infoConfig = {
+        package: '@heybello/bello-sdk',
+        react: 'BelloWidget',
+        bundle: 'ESM + IIFE',
+        types: 'Included',
+        version: 'latest',
       };
 
       const snippets = {
-        html: [
-          '<!-- Bello SDK embed -->',
-          '<script',
-          '  src=\"https://unpkg.com/@heybello/bello-sdk@latest/dist/bello-embed.iife.js\"',
-          '  defer',
-          `  data-project-id=\"${sampleConfig.projectId}\"`,
-          `  data-api-base-url=\"${sampleConfig.apiBaseUrl}\"`,
-          `  data-position=\"${sampleConfig.position}\"`,
-          `  data-theme=\"${sampleConfig.theme}\"`,
-          `  data-orb-style=\"${sampleConfig.orbStyle}\"`,
-          `  data-agent-enabled=\"${sampleConfig.agentEnabled}\"`,
-          `  data-voice-enabled=\"${sampleConfig.voiceEnabled}\"`,
-          '></scr' + 'ipt>',
-        ].join('\n'),
-        css: `#bello-widget-root {
-  --bello-bg: #0b0f1a;
-  --bello-fg: #f8fafc;
-  --bello-surface: #0f172a;
-  --bello-border: rgba(148, 163, 184, 0.3);
-  --bello-cta-bg: #14b8a6;
-  --bello-cta-fg: #0f172a;
-  --bello-radius: 16px;
-  --bello-width: 420px;
-  --bello-height: 520px;
+        install: `npm install @heybello/bello-sdk
+# or
+pnpm add @heybello/bello-sdk
+# or
+yarn add @heybello/bello-sdk`.trim(),
+        react: `import { BelloWidget } from '@heybello/bello-sdk/react';
+
+export default function Page() {
+  return (
+    <BelloWidget
+      projectId="YOUR_PROJECT_ID"
+      apiBaseUrl="https://your-api.example.com"
+      position="bottom-right"
+      theme="dark"
+      orbStyle="galaxy"
+    />
+  );
 }`.trim(),
-        js: `window.Bello = window.Bello || [];
+        js: `import '@heybello/bello-sdk/dist/bello-embed.iife.js';
+
+window.Bello = window.Bello || [];
 window.Bello.push([
   'init',
   {
-    projectId: '${sampleConfig.projectId}',
-    apiBaseUrl: '${sampleConfig.apiBaseUrl}',
-    position: '${sampleConfig.position}',
-    theme: '${sampleConfig.theme}',
-    orbStyle: '${sampleConfig.orbStyle}',
+    projectId: 'YOUR_PROJECT_ID',
+    apiBaseUrl: 'https://your-api.example.com',
+    position: 'bottom-right',
+    theme: 'dark',
+    orbStyle: 'galaxy',
     widgetTitle: 'Need support?',
     widgetButtonTitle: 'Chat with AI'
   }
-]);
-
-window.Bello.push(['open']);
-// window.Bello.push(['update', { theme: 'light' }]);
-// window.Bello.push(['close']);`.trim(),
+]);`.trim(),
       };
 
       const setConfigValues = () => {
@@ -594,7 +590,7 @@ window.Bello.push(['open']);
           .querySelectorAll('[data-config]')
           .forEach((node) => {
             const key = node.getAttribute('data-config');
-            node.textContent = liveConfig[key] ?? '';
+            node.textContent = infoConfig[key] ?? '';
           });
       };
 
@@ -664,31 +660,10 @@ window.Bello.push(['open']);
         });
       };
 
-      const loadWidget = () => {
-        const script = document.createElement('script');
-        script.src = '/dist/bello-embed.iife.js';
-        script.defer = true;
-        script.setAttribute('data-project-id', liveConfig.projectId);
-        script.setAttribute('data-api-base-url', liveConfig.apiBaseUrl);
-        script.setAttribute('data-position', liveConfig.position);
-        script.setAttribute('data-theme', liveConfig.theme);
-        script.setAttribute('data-orb-style', liveConfig.orbStyle);
-        script.setAttribute(
-          'data-agent-enabled',
-          String(liveConfig.agentEnabled)
-        );
-        script.setAttribute(
-          'data-voice-enabled',
-          String(liveConfig.voiceEnabled)
-        );
-        document.body.appendChild(script);
-      };
-
       setConfigValues();
       setCodeBlocks();
       bindCopyButtons();
       bindTabs();
-      loadWidget();
     </script>
   </body>
 </html>

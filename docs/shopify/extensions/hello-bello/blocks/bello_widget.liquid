@@ -1,0 +1,248 @@
+{% assign bello_cdn_url = 'https://unpkg.com/@heybello/bello-sdk@latest/dist/bello-embed.iife.js' %}
+{% assign bello_api_base_url = 'https://bello-frontend-e88f.vercel.app' %}
+
+{% if block.settings.project_id != blank %}
+  <script
+    src="{{ bello_cdn_url }}"
+    defer
+    data-bello-sdk="true"
+    data-project-id="{{ block.settings.project_id | escape }}"
+    data-api-base-url="{{ bello_api_base_url }}"
+    data-position="bottom-right"
+    data-theme="dark"
+    data-orb-style="galaxy"
+    data-agent-enabled="true"
+    data-voice-enabled="true"
+  ></script>
+  <script>
+    (function () {
+      var sdkSrc = {{ bello_cdn_url | json }};
+      var sdk =
+        document.querySelector('script[data-bello-sdk="true"]') ||
+        null;
+      if (!sdk) {
+        sdk = document.createElement('script');
+        sdk.src = sdkSrc;
+        sdk.defer = true;
+        sdk.setAttribute('data-bello-sdk', 'true');
+        document.head.appendChild(sdk);
+      }
+
+      var payload = {
+        projectId: {{ block.settings.project_id | json }},
+        apiBaseUrl: {{ bello_api_base_url | json }},
+        position: "bottom-right",
+        theme: "dark",
+        orbStyle: "galaxy",
+        agentEnabled: true,
+        voiceEnabled: true
+      };
+      var attempts = 0;
+      var maxAttempts = 40;
+      var tryInit = function () {
+        attempts++;
+        var q = window.Bello;
+        var ready = q && typeof q.push === "function" && q.push !== Array.prototype.push;
+        if (ready) {
+          if (document.getElementById("bello-widget-root")) {
+            q.push(["update", payload]);
+          } else {
+            q.push(["init", payload]);
+          }
+          return true;
+        }
+        if (attempts < maxAttempts) {
+          setTimeout(tryInit, 100);
+        }
+        return false;
+      };
+
+      if (sdk && sdk.addEventListener) {
+        sdk.addEventListener("load", function () {
+          setTimeout(tryInit, 0);
+        });
+        sdk.addEventListener("error", function () {
+          if (window.console && console.error) {
+            console.error("[Bello] SDK script failed to load:", sdkSrc);
+          }
+        });
+      } else {
+        setTimeout(tryInit, 0);
+      }
+    })();
+  </script>
+{% elsif request.design_mode %}
+  <div class="bello-widget-placeholder">
+    <strong>Bello Widget</strong>
+    <p>Add your Project ID to enable the widget.</p>
+  </div>
+{% endif %}
+
+{% if block.settings.debug_mode %}
+  <div
+    class="bello-widget-debug"
+    data-project-id="{{ block.settings.project_id | escape }}"
+    data-api-base-url="{{ bello_api_base_url }}"
+  >
+    <strong>Bello Debug</strong>
+    <div class="bello-debug-line">
+      <button type="button" data-bello-debug-open>
+        Force open widget
+      </button>
+    </div>
+    <div class="bello-debug-line" data-bello-debug-sdk>
+      SDK: checking…
+    </div>
+    <div class="bello-debug-line" data-bello-debug-queue>
+      Queue: checking…
+    </div>
+    <div class="bello-debug-line" data-bello-debug-root>
+      Root: checking…
+    </div>
+    <div class="bello-debug-line" data-bello-debug-shadow>
+      Shadow: checking…
+    </div>
+    <div class="bello-debug-line" data-bello-debug-dom>
+      Widget DOM: checking…
+    </div>
+    <div class="bello-debug-line" data-bello-debug-rect>
+      Widget rect: checking…
+    </div>
+    <div class="bello-debug-line" data-bello-debug-status>
+      Debug enabled. Checking API…
+    </div>
+    <div class="bello-debug-line" data-bello-debug-details></div>
+  </div>
+  <script>
+    (function () {
+      var root = document.currentScript && document.currentScript.previousElementSibling;
+      if (!root || !root.hasAttribute('data-project-id')) return;
+      var projectId = root.getAttribute('data-project-id') || '';
+      var apiBaseUrl = root.getAttribute('data-api-base-url') || '';
+      var statusEl = root.querySelector('[data-bello-debug-status]');
+      var detailEl = root.querySelector('[data-bello-debug-details]');
+      var sdkEl = root.querySelector('[data-bello-debug-sdk]');
+      var queueEl = root.querySelector('[data-bello-debug-queue]');
+      var rootEl = root.querySelector('[data-bello-debug-root]');
+      var shadowEl = root.querySelector('[data-bello-debug-shadow]');
+      var domEl = root.querySelector('[data-bello-debug-dom]');
+      var rectEl = root.querySelector('[data-bello-debug-rect]');
+      var openBtn = root.querySelector('[data-bello-debug-open]');
+      var setText = function (el, text) { if (el) el.textContent = text; };
+      if (openBtn) {
+        openBtn.addEventListener('click', function () {
+          if (window.Bello && typeof window.Bello.push === 'function') {
+            window.Bello.push(['open']);
+          }
+        });
+      }
+
+      if (!projectId) {
+        setText(statusEl, 'Missing Project ID.');
+        setText(detailEl, 'Set Project ID in the block settings.');
+        setText(sdkEl, 'SDK: not checked');
+        setText(queueEl, 'Queue: not checked');
+        setText(rootEl, 'Root: not checked');
+        setText(shadowEl, 'Shadow: not checked');
+        setText(domEl, 'Widget DOM: not checked');
+        setText(rectEl, 'Widget rect: not checked');
+        return;
+      }
+
+      if (!apiBaseUrl) {
+        setText(statusEl, 'Missing API Base URL.');
+        setText(detailEl, 'Check the hardcoded API URL in the block.');
+        setText(sdkEl, 'SDK: not checked');
+        setText(queueEl, 'Queue: not checked');
+        setText(rootEl, 'Root: not checked');
+        setText(shadowEl, 'Shadow: not checked');
+        setText(domEl, 'Widget DOM: not checked');
+        setText(rectEl, 'Widget rect: not checked');
+        return;
+      }
+
+      var sdk = document.querySelector('script[data-bello-sdk="true"]');
+      if (sdk) {
+        setText(sdkEl, 'SDK: tag found');
+        if (sdk.addEventListener) {
+          sdk.addEventListener('load', function () {
+            setText(sdkEl, 'SDK: loaded');
+          });
+          sdk.addEventListener('error', function () {
+            setText(sdkEl, 'SDK: load failed (CSP/CDN)');
+          });
+        }
+      } else {
+        setText(sdkEl, 'SDK: tag missing');
+      }
+
+      setTimeout(function () {
+        var q = window.Bello;
+        var ready = q && typeof q.push === "function" && q.push !== Array.prototype.push;
+        setText(queueEl, ready ? 'Queue: ready' : 'Queue: NOT ready');
+        var rootNode = document.getElementById('bello-widget-root');
+        setText(rootEl, rootNode ? 'Root: present' : 'Root: missing');
+        var shadow = rootNode && rootNode.shadowRoot;
+        setText(shadowEl, shadow ? 'Shadow: present' : 'Shadow: missing');
+        if (shadow) {
+          var launcher = shadow.querySelector('.bello-container');
+          var pop = shadow.querySelector('.bello-pop');
+          var hasDom = !!(launcher || pop);
+          setText(domEl, hasDom ? 'Widget DOM: present' : 'Widget DOM: missing');
+          var rectTarget = launcher || pop;
+          if (rectTarget && rectTarget.getBoundingClientRect) {
+            var r = rectTarget.getBoundingClientRect();
+            setText(rectEl, 'Widget rect: ' + Math.round(r.left) + ',' + Math.round(r.top) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+          } else {
+            setText(rectEl, 'Widget rect: n/a');
+          }
+        } else {
+          setText(domEl, 'Widget DOM: missing');
+          setText(rectEl, 'Widget rect: n/a');
+        }
+        if (!ready && sdk) {
+          setText(detailEl, 'SDK loaded but window.Bello is not ready.');
+        }
+      }, 1500);
+
+      var url = apiBaseUrl.replace(/\/$/, '') + '/api/projects/' + encodeURIComponent(projectId);
+      fetch(url, { method: 'GET', mode: 'cors', credentials: 'omit' })
+        .then(function (res) {
+          setText(statusEl, 'Config fetch: ' + res.status + ' ' + res.statusText);
+          if (!res.ok) {
+            return res.text().then(function (t) {
+              setText(detailEl, t ? t.slice(0, 200) : 'No response body.');
+            });
+          }
+          return res.json().then(function () {
+            setText(detailEl, 'Config OK.');
+          });
+        })
+        .catch(function (err) {
+          setText(statusEl, 'Config fetch failed.');
+          setText(detailEl, (err && err.message) ? err.message : String(err));
+        });
+    })();
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Bello Widget",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "project_id",
+      "label": "Project ID",
+      "info": "Required. Get this from your Bello dashboard."
+    },
+    {
+      "type": "checkbox",
+      "id": "debug_mode",
+      "label": "Enable debug panel",
+      "default": false
+    }
+  ]
+}
+{% endschema %}

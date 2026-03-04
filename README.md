@@ -21,16 +21,18 @@ Bello SDK is a lightweight JavaScript library that enables you to integrate conv
 ## Install
 
 ```bash
-pnpm add @bello/bello-sdk
+pnpm add @heybello/bello-sdk
 # or
-npm install @bello/bello-sdk
+npm install @heybello/bello-sdk
 ```
+
+NPM guide: `docs/npm/README.md`.
 
 ## CDN / HTML usage
 
 ```html
 <script
-  src="https://unpkg.com/@bello/bello-sdk@latest/dist/bello-embed.iife.js"
+  src="https://unpkg.com/@heybello/bello-sdk@latest/dist/bello-embed.iife.js"
   defer
   data-project-id="YOUR_PROJECT_ID"
   data-api-base-url="https://your-api.example.com"
@@ -39,6 +41,8 @@ npm install @bello/bello-sdk
   data-orb-style="galaxy"
 ></script>
 ```
+
+Detailed HTML, CSS, and JavaScript guide: `docs/html/README.md`.
 
 You can also initialize manually:
 
@@ -61,7 +65,7 @@ You can also initialize manually:
 ## React / Next.js usage
 
 ```tsx
-import { BelloWidget } from '@bello/bello-sdk/react';
+import { BelloWidget } from '@heybello/bello-sdk/react';
 
 export default function Page() {
   return (
