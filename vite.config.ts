@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       __DEV__: !isProd,
+      __BELLO_WIDGET_UI_MODE__: JSON.stringify(
+        process.env.BELLO_WIDGET_UI_MODE || 'synced'
+      ),
       __BELLO_API_URL__: JSON.stringify(
         process.env.BELLO_API_URL || 'https://api.heybello.dev'
       ),

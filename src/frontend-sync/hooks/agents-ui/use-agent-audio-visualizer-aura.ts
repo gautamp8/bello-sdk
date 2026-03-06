@@ -43,7 +43,7 @@ function useAnimatedValue<T>(initialValue: T) {
   return { value, motionValue, controls: controlsRef, animate: animateFn };
 }
 
-export function useAuraVisualizer(
+export function useAgentAudioVisualizerAura(
   state: AgentState | string | undefined,
   audioTrack?: LocalAudioTrack | RemoteAudioTrack | TrackReferenceOrPlaceholder,
 ) {

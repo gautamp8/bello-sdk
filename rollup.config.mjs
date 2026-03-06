@@ -47,6 +47,9 @@ const basePlugins = [
   replace({
     preventAssignment: true,
     values: {
+      __BELLO_WIDGET_UI_MODE__: JSON.stringify(
+        process.env.BELLO_WIDGET_UI_MODE || 'synced'
+      ),
       __BELLO_API_URL__: JSON.stringify(
         process.env.BELLO_API_URL || 'https://api.heybello.dev'
       ),
@@ -61,10 +64,42 @@ const basePlugins = [
   }),
 ];
 
+function shouldIgnoreWarning(warning) {
+  const message = warning?.message ?? '';
+
+  if (
+    warning?.code === 'MODULE_LEVEL_DIRECTIVE' &&
+    typeof message === 'string' &&
+    message.includes('"use client"')
+  ) {
+    return true;
+  }
+
+  if (
+    warning?.code === 'SOURCEMAP_ERROR' &&
+    typeof message === 'string' &&
+    message.includes("Can't resolve original location of error")
+  ) {
+    return true;
+  }
+
+  if (warning?.code === 'UNUSED_EXTERNAL_IMPORT') {
+    return true;
+  }
+
+  return false;
+}
+
+function onwarn(warning, warn) {
+  if (shouldIgnoreWarning(warning)) return;
+  warn(warning);
+}
+
 export default [
   {
     input,
     external,
+    onwarn,
     plugins: basePlugins,
     output: {
       file: 'dist/react.es.js',
@@ -76,6 +111,7 @@ export default [
   {
     input,
     external,
+    onwarn,
     plugins: [
       ...basePlugins,
       replace({

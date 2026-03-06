@@ -1,8 +1,14 @@
 export type Theme = 'light' | 'dark';
 
 export type InitOptions = {
+  /** Preferred identifier for SDK usage */
   projectId: string;
+  /** Preferred API key for SDK usage */
   widgetApiKey: string;
+  /** Alias for projectId (useful for script-tag users) */
+  projectKey?: string;
+  /** Alias for widgetApiKey (useful for script-tag users) */
+  apiKey?: string;
   apiBaseUrl?: string;
   position?:
     | 'bottom-right'

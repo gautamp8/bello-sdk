@@ -1,0 +1,39 @@
+{
+  "sourceRoot": "../bello-frontend/src",
+  "sourceGitSha": "5be5b76df1e85e0fa60db76c52228f9b542c3767",
+  "entrypoints": [
+    "components/ui/bello-popup-view.tsx",
+    "components/ui/info-collection-modal.tsx",
+    "components/agents-ui/agent-control-bar.tsx",
+    "components/agents-ui/agent-chat-transcript.tsx",
+    "components/agents-ui/agent-audio-visualizer-aura.tsx"
+  ],
+  "fileCount": 25,
+  "files": [
+    "components/agents-ui/agent-audio-visualizer-aura.tsx",
+    "components/agents-ui/agent-audio-visualizer-bar.tsx",
+    "components/agents-ui/agent-chat-indicator.tsx",
+    "components/agents-ui/agent-chat-transcript.tsx",
+    "components/agents-ui/agent-control-bar.tsx",
+    "components/agents-ui/agent-disconnect-button.tsx",
+    "components/agents-ui/agent-track-control.tsx",
+    "components/agents-ui/agent-track-toggle.tsx",
+    "components/agents-ui/react-shader-toy.tsx",
+    "components/ai-elements/conversation.tsx",
+    "components/ai-elements/message.tsx",
+    "components/ui/bello-popup-view.tsx",
+    "components/ui/button-group.tsx",
+    "components/ui/button.tsx",
+    "components/ui/info-collection-modal.tsx",
+    "components/ui/select.tsx",
+    "components/ui/separator.tsx",
+    "components/ui/toggle.tsx",
+    "components/ui/tooltip.tsx",
+    "hooks/agents-ui/use-agent-audio-visualizer-aura.ts",
+    "hooks/agents-ui/use-agent-audio-visualizer-bar.ts",
+    "hooks/agents-ui/use-agent-control-bar.ts",
+    "hooks/use-chat-and-transcription.ts",
+    "hooks/useDebug.ts",
+    "lib/utils.ts"
+  ]
+}

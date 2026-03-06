@@ -4,12 +4,14 @@ import type { InitOptions, Theme, Cmd } from './types';
 import { fetchWidgetConfig } from './api';
 import { BelloWidget } from './widget/BelloWidget';
 import cssText from './index.css?inline';
+import frontendWidgetCss from './generated/frontend-widget.css?inline';
 import './polyfills';
 
 let currentOpts: InitOptions | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
 let shadowRootRef: ShadowRoot | null = null;
 let hostEl: HTMLElement | null = null; // host element to carry CSS vars
+let portalContainerRef: HTMLElement | null = null;
 
 function mirrorHeadStylesInto(shadow: ShadowRoot) {
   const seen = new WeakSet<Node>();
@@ -36,11 +38,32 @@ function applyThemeVars(vars?: Record<string, string>) {
     hostEl.style.setProperty(k, v);
 }
 
+function resolveKeys(opts: InitOptions): InitOptions {
+  const projectId =
+    opts.projectId || (opts as any).projectKey || '';
+  const widgetApiKey =
+    opts.widgetApiKey || (opts as any).apiKey || '';
+
+  return {
+    ...opts,
+    projectId,
+    widgetApiKey,
+  };
+}
+
 async function mount(opts: InitOptions) {
+  const normalizedOpts = resolveKeys(opts);
+  if (!normalizedOpts.projectId || !normalizedOpts.widgetApiKey) {
+    console.warn(
+      '[Bello] projectId/projectKey and widgetApiKey/apiKey are required. Widget will not initialize.',
+    );
+    return;
+  }
+
   // Fetch server config first, then merge with local overrides
   let serverCfg;
   try {
-    serverCfg = await fetchWidgetConfig(opts);
+    serverCfg = await fetchWidgetConfig(normalizedOpts);
   } catch (e) {
     console.warn('[Bello] Failed to fetch widget config, using defaults:', e);
     serverCfg = null;
@@ -48,19 +71,27 @@ async function mount(opts: InitOptions) {
 
   // Merge: server config as base, then data attribute overrides on top
   currentOpts = {
-    agentEnabled: opts.agentEnabled ?? true,
-    voiceEnabled: opts.voiceEnabled ?? true,
-    ...opts,
-    theme: opts.theme ?? serverCfg?.theme ?? 'dark',
-    accentColor: opts.accentColor ?? serverCfg?.accentColor ?? '#1FD5F9',
-    position: opts.position ?? serverCfg?.position ?? 'bottom-right',
-    widgetTitle: opts.widgetTitle ?? serverCfg?.widgetTitle ?? 'Chat with AI',
-    widgetSubtitle: opts.widgetSubtitle ?? serverCfg?.widgetSubtitle ?? 'Ask me anything',
+    agentEnabled: normalizedOpts.agentEnabled ?? true,
+    voiceEnabled: normalizedOpts.voiceEnabled ?? true,
+    ...normalizedOpts,
+    theme: normalizedOpts.theme ?? serverCfg?.theme ?? 'dark',
+    accentColor:
+      normalizedOpts.accentColor ?? serverCfg?.accentColor ?? '#1FD5F9',
+    position:
+      normalizedOpts.position ?? serverCfg?.position ?? 'bottom-right',
+    widgetTitle:
+      normalizedOpts.widgetTitle ?? serverCfg?.widgetTitle ?? 'Chat with AI',
+    widgetSubtitle:
+      normalizedOpts.widgetSubtitle ??
+      serverCfg?.widgetSubtitle ??
+      'Ask me anything',
     widgetButtonTitle:
-      opts.widgetButtonTitle ?? serverCfg?.widgetButtonTitle ?? 'Start chat',
+      normalizedOpts.widgetButtonTitle ??
+      serverCfg?.widgetButtonTitle ??
+      'Start chat',
     themeVars: {
       ...(serverCfg?.themeVars ?? {}),
-      ...(opts.themeVars ?? {}),
+      ...(normalizedOpts.themeVars ?? {}),
     },
   };
   const theme = (currentOpts.theme ?? 'dark') as Theme;
@@ -70,11 +101,18 @@ async function mount(opts: InitOptions) {
   const shadow = createShadowHost(container);
   shadowRootRef = shadow;
 
-  // base CSS
-  const style = document.createElement('style');
-  style.textContent = cssText;
-  shadow.appendChild(style);
-  mirrorHeadStylesInto(shadow);
+  // Keep widget styles authoritative inside shadow root.
+  // Host page styles are not mirrored by default to avoid CSS drift.
+
+  // base runtime CSS
+  const runtimeStyle = document.createElement('style');
+  runtimeStyle.textContent = cssText;
+  shadow.appendChild(runtimeStyle);
+
+  // generated frontend widget CSS (tailwind + component classes)
+  const frontendStyle = document.createElement('style');
+  frontendStyle.textContent = frontendWidgetCss;
+  shadow.appendChild(frontendStyle);
 
   // apply CSS variables (API/user)
   applyThemeVars(currentOpts.themeVars);
@@ -91,13 +129,21 @@ async function mount(opts: InitOptions) {
   };
   Object.assign(anchor.style, map[pos]);
 
+  const mountNode = document.createElement('div');
+  const portalContainer = document.createElement('div');
+  portalContainer.className = 'bello-portal-root';
+  anchor.appendChild(mountNode);
+  anchor.appendChild(portalContainer);
+  portalContainerRef = portalContainer;
+
   shadow.appendChild(anchor);
-  root = createRoot(anchor);
+  root = createRoot(mountNode);
   root.render(
     <BelloWidget
       opts={currentOpts}
       theme={theme}
       onClose={() => {}}
+      portalContainer={portalContainer}
     />
   );
 }
@@ -110,6 +156,7 @@ function rerender() {
       opts={currentOpts}
       theme={(currentOpts.theme ?? 'dark') as Theme}
       onClose={() => {}}
+      portalContainer={portalContainerRef}
     />
   );
 }
