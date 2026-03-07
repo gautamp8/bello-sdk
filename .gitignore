@@ -23,3 +23,6 @@ coverage/
 
 # Misc
 *.local
+.wp-env/
+docs/wordpress/dist/
+docs/wordpress/plugin/assets/sdk/

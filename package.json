@@ -39,7 +39,15 @@
     "build:embed": "vite build --mode embed",
     "build:react": "rollup -c",
     "build:types": "tsc -p tsconfig.build.json",
-    "build": "rm -rf dist && pnpm sync:frontend-widget && pnpm build:widget-css && pnpm build:embed && pnpm build:react && pnpm build:types"
+    "build": "rm -rf dist && pnpm sync:frontend-widget && pnpm build:widget-css && pnpm build:embed && pnpm build:react && pnpm build:types",
+    "wordpress:build": "node ./scripts/build-wordpress-plugin.mjs",
+    "wordpress:watch": "node ./scripts/build-wordpress-plugin.mjs --watch",
+    "wordpress:zip": "pnpm wordpress:build && node ./scripts/package-wordpress-plugin.mjs",
+    "wordpress:env:start": "pnpm exec wp-env start --config=docs/wordpress/.wp-env.json",
+    "wordpress:env:stop": "pnpm exec wp-env stop --config=docs/wordpress/.wp-env.json",
+    "wordpress:env:clean": "pnpm exec wp-env destroy --force --config=docs/wordpress/.wp-env.json",
+    "wordpress:env:seed": "node ./scripts/seed-wordpress-env.mjs",
+    "wordpress:dev": "node ./scripts/wordpress-dev.mjs"
   },
   "peerDependencies": {
     "react": "^18 || ^19",
@@ -65,6 +73,7 @@
     "use-stick-to-bottom": "^1.1.3"
   },
   "devDependencies": {
+    "@wordpress/env": "^11.1.0",
     "@tailwindcss/cli": "^4.1.13",
     "@eslint/js": "^9.33.0",
     "@rollup/plugin-commonjs": "^28.0.1",

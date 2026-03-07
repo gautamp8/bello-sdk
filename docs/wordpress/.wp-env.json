@@ -1,0 +1,10 @@
+{
+  "mappings": {
+    "wp-content/plugins/bello-widget": "./docs/wordpress/plugin"
+  },
+  "testsEnvironment": false,
+  "config": {
+    "WP_DEBUG": true,
+    "SCRIPT_DEBUG": true
+  }
+}
