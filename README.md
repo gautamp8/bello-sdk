@@ -101,7 +101,7 @@ That command will:
 - build the current SDK bundle into the plugin folder
 - start the local WordPress site
 - activate the `bello-widget` plugin
-- create or update a `Bello Widget Demo` page with `[bello_widget]`
+- create or update a `Bello Widget Demo` page with `[zaidop_bello_widget]`
 - keep rebuilding the plugin bundle when SDK code changes
 
 4. Open the demo page:
@@ -150,7 +150,7 @@ pnpm wordpress:zip
 4. Go to `Settings -> Bello Widget`.
 5. Fill in `Project ID` and `Widget API Key`.
 6. Either:
-   - add `[bello_widget]` to a page, or
+   - add `[zaidop_bello_widget]` to a page, or
    - enable `Load globally`.
 
 ### Troubleshooting WordPress local testing

@@ -6,20 +6,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const wpEnvConfig = 'docs/wordpress/.wp-env.json';
-const shortcode = '[bello_widget]';
+const shortcode = '[zaidop_bello_widget]';
 const pageSlug = 'bello-widget-demo';
 const pageTitle = 'Bello Widget Demo';
 
 runWp(['plugin', 'activate', 'bello-widget']);
 
-updateOptionFromEnv('BELLO_WORDPRESS_PROJECT_ID', 'bello_widget_project_id');
+updateOptionFromEnv(
+  'BELLO_WORDPRESS_PROJECT_ID',
+  'zaidop_bello_widget_project_id'
+);
 updateOptionFromEnv(
   'BELLO_WORDPRESS_WIDGET_API_KEY',
-  'bello_widget_widget_api_key'
+  'zaidop_bello_widget_widget_api_key'
 );
 updateOptionFromEnv(
   'BELLO_WORDPRESS_API_BASE_URL',
-  'bello_widget_api_base_url'
+  'zaidop_bello_widget_api_base_url'
 );
 
 const existingId = runWp(

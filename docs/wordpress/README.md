@@ -6,7 +6,7 @@ The plugin in `docs/wordpress/plugin` is a thin wrapper over the current Bello e
 
 - Settings page for `projectId`, `widgetApiKey`, optional `apiBaseUrl`, theme, position, accent color, widget copy, and agent/voice toggles
 - Gutenberg block
-- Shortcode: `[bello_widget]`
+- Shortcode: `[zaidop_bello_widget]`
 - Optional global loading on every frontend page
 - Local bundled SDK asset by default
 
@@ -39,7 +39,7 @@ That will:
 - build the current SDK into the plugin asset folder
 - start the local WordPress environment
 - activate the plugin
-- seed a `Bello Widget Demo` page containing `[bello_widget]`
+- seed a `Bello Widget Demo` page containing `[zaidop_bello_widget]`
 - keep rebuilding the plugin bundle when the SDK changes
 
 Default local URLs:
@@ -85,12 +85,12 @@ pnpm wordpress:zip
 3. Activate `Bello Widget`.
 4. Go to `Settings -> Bello Widget`.
 5. Add your `Project ID` and `Widget API Key`.
-6. Add `[bello_widget]` to a page or enable `Load globally`.
+6. Add `[zaidop_bello_widget]` to a page or enable `Load globally`.
 
 ## Shortcode overrides
 
 ```text
-[bello_widget project_id="YOUR_PROJECT_ID" widget_api_key="YOUR_WIDGET_API_KEY" theme="light" position="bottom-left" accent_color="#FF6B2C"]
+[zaidop_bello_widget project_id="YOUR_PROJECT_ID" widget_api_key="YOUR_WIDGET_API_KEY" theme="light" position="bottom-left" accent_color="#FF6B2C"]
 ```
 
 Page-level block and shortcode overrides take precedence over saved settings. If multiple widget declarations are rendered on the same page, the last one wins because the runtime is singleton per page.

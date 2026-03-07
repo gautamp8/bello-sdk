@@ -13,7 +13,7 @@
     var SelectControl = wp.components.SelectControl;
     var Notice = wp.components.Notice;
 
-    var defaults = window.belloWidgetDefaults || {};
+    var defaults = window.zaidopBelloWidgetDefaults || {};
     var positions = defaults.positions || {
         'bottom-right': 'Bottom right',
         'bottom-left': 'Bottom left',
@@ -62,7 +62,7 @@
         })());
     }
 
-    registerBlockType('bello/widget', {
+    registerBlockType('zaidop-bello-widget/widget', {
         title: __('Bello Widget', 'bello-widget'),
         icon: 'format-audio',
         category: 'widgets',

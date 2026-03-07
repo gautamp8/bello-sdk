@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bello Widget
  * Description: Embed the Bello voice widget via shortcode, block, or global settings.
- * Version: 0.4.0
+ * Version: 0.4.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Bello
@@ -14,12 +14,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class Bello_Widget_Plugin {
-    const VERSION = '0.4.0';
-    const HANDLE = 'bello-widget-sdk';
-    const BLOCK_HANDLE = 'bello-widget-block';
-    const OPTION_GROUP = 'bello_widget';
-    const OPTION_PREFIX = 'bello_widget_';
+final class Zaidop_Bello_Widget_Plugin {
+    const VERSION = '0.4.1';
+    const HANDLE = 'zaidop-bello-widget-sdk';
+    const BLOCK_HANDLE = 'zaidop-bello-widget-block';
+    const OPTION_GROUP = 'zaidop_bello_widget';
+    const OPTION_PREFIX = 'zaidop_bello_widget_';
+    const SHORTCODE = 'zaidop_bello_widget';
+    const BLOCK_NAME = 'zaidop-bello-widget/widget';
+    const JS_DEFAULTS_OBJECT = 'zaidopBelloWidgetDefaults';
     const SCRIPT_RELATIVE_PATH = 'assets/sdk/bello-embed.iife.js';
 
     private static $instance = null;
@@ -40,7 +43,7 @@ final class Bello_Widget_Plugin {
         add_action('admin_menu', array($this, 'add_settings_page'));
         add_action('admin_notices', array($this, 'render_admin_notices'));
         add_action('wp_enqueue_scripts', array($this, 'maybe_enqueue_global'));
-        add_shortcode('bello_widget', array($this, 'shortcode'));
+        add_shortcode(self::SHORTCODE, array($this, 'shortcode'));
         add_filter(
             'plugin_action_links_' . plugin_basename(__FILE__),
             array($this, 'settings_link')
@@ -169,7 +172,7 @@ final class Bello_Widget_Plugin {
         ?>
         <div class="wrap">
             <h1><?php echo esc_html__('Bello Widget', 'bello-widget'); ?></h1>
-            <p><?php echo esc_html__('Use the same widget runtime as the npm package and CDN embed, then place it with a shortcode, block, or global loading.', 'bello-widget'); ?></p>
+            <p><?php echo esc_html__('Use the same widget runtime as the Bello service embed, then place it with a shortcode, block, or global loading.', 'bello-widget'); ?></p>
             <?php settings_errors(); ?>
             <form method="post" action="options.php">
                 <?php settings_fields(self::OPTION_GROUP); ?>
@@ -178,28 +181,28 @@ final class Bello_Widget_Plugin {
                 <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_project_id"><?php echo esc_html__('Project ID', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_project_id"><?php echo esc_html__('Project ID', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <input name="bello_widget_project_id" id="bello_widget_project_id" type="text" class="regular-text" value="<?php echo esc_attr($settings['project_id']); ?>" />
+                            <input name="zaidop_bello_widget_project_id" id="zaidop_bello_widget_project_id" type="text" class="regular-text" value="<?php echo esc_attr($settings['project_id']); ?>" />
                             <p class="description"><?php echo esc_html__('Required. Found in the Bello Deploy screen.', 'bello-widget'); ?></p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_widget_api_key"><?php echo esc_html__('Widget API Key', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_widget_api_key"><?php echo esc_html__('Widget API Key', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <input name="bello_widget_widget_api_key" id="bello_widget_widget_api_key" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_api_key']); ?>" />
+                            <input name="zaidop_bello_widget_widget_api_key" id="zaidop_bello_widget_widget_api_key" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_api_key']); ?>" />
                             <p class="description"><?php echo esc_html__('Required. This powers config fetches and LiveKit token creation.', 'bello-widget'); ?></p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_api_base_url"><?php echo esc_html__('API Base URL', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_api_base_url"><?php echo esc_html__('API Base URL', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <input name="bello_widget_api_base_url" id="bello_widget_api_base_url" type="url" class="regular-text" value="<?php echo esc_attr($settings['api_base_url']); ?>" />
+                            <input name="zaidop_bello_widget_api_base_url" id="zaidop_bello_widget_api_base_url" type="url" class="regular-text" value="<?php echo esc_attr($settings['api_base_url']); ?>" />
                             <p class="description"><?php echo esc_html__('Optional. Leave blank to use the default Bello API.', 'bello-widget'); ?></p>
                         </td>
                     </tr>
@@ -209,10 +212,10 @@ final class Bello_Widget_Plugin {
                 <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_position"><?php echo esc_html__('Position', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_position"><?php echo esc_html__('Position', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <select name="bello_widget_position" id="bello_widget_position">
+                            <select name="zaidop_bello_widget_position" id="zaidop_bello_widget_position">
                                 <option value="bottom-right" <?php selected($settings['position'], 'bottom-right'); ?>><?php echo esc_html__('Bottom right', 'bello-widget'); ?></option>
                                 <option value="bottom-left" <?php selected($settings['position'], 'bottom-left'); ?>><?php echo esc_html__('Bottom left', 'bello-widget'); ?></option>
                                 <option value="top-right" <?php selected($settings['position'], 'top-right'); ?>><?php echo esc_html__('Top right', 'bello-widget'); ?></option>
@@ -222,10 +225,10 @@ final class Bello_Widget_Plugin {
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_theme"><?php echo esc_html__('Theme', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_theme"><?php echo esc_html__('Theme', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <select name="bello_widget_theme" id="bello_widget_theme">
+                            <select name="zaidop_bello_widget_theme" id="zaidop_bello_widget_theme">
                                 <option value="dark" <?php selected($settings['theme'], 'dark'); ?>><?php echo esc_html__('Dark', 'bello-widget'); ?></option>
                                 <option value="light" <?php selected($settings['theme'], 'light'); ?>><?php echo esc_html__('Light', 'bello-widget'); ?></option>
                             </select>
@@ -233,35 +236,35 @@ final class Bello_Widget_Plugin {
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_accent_color"><?php echo esc_html__('Accent color', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_accent_color"><?php echo esc_html__('Accent color', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <input name="bello_widget_accent_color" id="bello_widget_accent_color" type="text" class="regular-text" placeholder="#1FD5F9" value="<?php echo esc_attr($settings['accent_color']); ?>" />
+                            <input name="zaidop_bello_widget_accent_color" id="zaidop_bello_widget_accent_color" type="text" class="regular-text" placeholder="#1FD5F9" value="<?php echo esc_attr($settings['accent_color']); ?>" />
                             <p class="description"><?php echo esc_html__('Optional. Matches the SDK accentColor override.', 'bello-widget'); ?></p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_widget_title"><?php echo esc_html__('Widget title', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_widget_title"><?php echo esc_html__('Widget title', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <input name="bello_widget_widget_title" id="bello_widget_widget_title" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_title']); ?>" />
+                            <input name="zaidop_bello_widget_widget_title" id="zaidop_bello_widget_widget_title" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_title']); ?>" />
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_widget_subtitle"><?php echo esc_html__('Widget subtitle', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_widget_subtitle"><?php echo esc_html__('Widget subtitle', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <input name="bello_widget_widget_subtitle" id="bello_widget_widget_subtitle" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_subtitle']); ?>" />
+                            <input name="zaidop_bello_widget_widget_subtitle" id="zaidop_bello_widget_widget_subtitle" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_subtitle']); ?>" />
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="bello_widget_widget_button_title"><?php echo esc_html__('Launcher button title', 'bello-widget'); ?></label>
+                            <label for="zaidop_bello_widget_widget_button_title"><?php echo esc_html__('Launcher button title', 'bello-widget'); ?></label>
                         </th>
                         <td>
-                            <input name="bello_widget_widget_button_title" id="bello_widget_widget_button_title" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_button_title']); ?>" />
+                            <input name="zaidop_bello_widget_widget_button_title" id="zaidop_bello_widget_widget_button_title" type="text" class="regular-text" value="<?php echo esc_attr($settings['widget_button_title']); ?>" />
                         </td>
                     </tr>
                 </table>
@@ -271,9 +274,9 @@ final class Bello_Widget_Plugin {
                     <tr>
                         <th scope="row"><?php echo esc_html__('Agent enabled', 'bello-widget'); ?></th>
                         <td>
-                            <input type="hidden" name="bello_widget_agent_enabled" value="0" />
-                            <label for="bello_widget_agent_enabled">
-                                <input name="bello_widget_agent_enabled" id="bello_widget_agent_enabled" type="checkbox" value="1" <?php checked($settings['agent_enabled'], true); ?> />
+                            <input type="hidden" name="zaidop_bello_widget_agent_enabled" value="0" />
+                            <label for="zaidop_bello_widget_agent_enabled">
+                                <input name="zaidop_bello_widget_agent_enabled" id="zaidop_bello_widget_agent_enabled" type="checkbox" value="1" <?php checked($settings['agent_enabled'], true); ?> />
                                 <?php echo esc_html__('Enable the live agent experience.', 'bello-widget'); ?>
                             </label>
                         </td>
@@ -281,9 +284,9 @@ final class Bello_Widget_Plugin {
                     <tr>
                         <th scope="row"><?php echo esc_html__('Voice enabled', 'bello-widget'); ?></th>
                         <td>
-                            <input type="hidden" name="bello_widget_voice_enabled" value="0" />
-                            <label for="bello_widget_voice_enabled">
-                                <input name="bello_widget_voice_enabled" id="bello_widget_voice_enabled" type="checkbox" value="1" <?php checked($settings['voice_enabled'], true); ?> />
+                            <input type="hidden" name="zaidop_bello_widget_voice_enabled" value="0" />
+                            <label for="zaidop_bello_widget_voice_enabled">
+                                <input name="zaidop_bello_widget_voice_enabled" id="zaidop_bello_widget_voice_enabled" type="checkbox" value="1" <?php checked($settings['voice_enabled'], true); ?> />
                                 <?php echo esc_html__('Enable voice playback and visualizers.', 'bello-widget'); ?>
                             </label>
                         </td>
@@ -291,9 +294,9 @@ final class Bello_Widget_Plugin {
                     <tr>
                         <th scope="row"><?php echo esc_html__('Load globally', 'bello-widget'); ?></th>
                         <td>
-                            <input type="hidden" name="bello_widget_load_globally" value="0" />
-                            <label for="bello_widget_load_globally">
-                                <input name="bello_widget_load_globally" id="bello_widget_load_globally" type="checkbox" value="1" <?php checked($settings['load_globally'], true); ?> />
+                            <input type="hidden" name="zaidop_bello_widget_load_globally" value="0" />
+                            <label for="zaidop_bello_widget_load_globally">
+                                <input name="zaidop_bello_widget_load_globally" id="zaidop_bello_widget_load_globally" type="checkbox" value="1" <?php checked($settings['load_globally'], true); ?> />
                                 <?php echo esc_html__('Initialize the widget on every frontend page.', 'bello-widget'); ?>
                             </label>
                             <p class="description"><?php echo esc_html__('Block or shortcode overrides rendered later on the page will still win.', 'bello-widget'); ?></p>
@@ -306,9 +309,9 @@ final class Bello_Widget_Plugin {
 
             <hr />
             <h2><?php echo esc_html__('Usage', 'bello-widget'); ?></h2>
-            <p><?php echo esc_html__('Shortcode:', 'bello-widget'); ?> <code>[bello_widget]</code></p>
+            <p><?php echo esc_html__('Shortcode:', 'bello-widget'); ?> <code>[zaidop_bello_widget]</code></p>
             <p><?php echo esc_html__('Per-page overrides use the same keys as the SDK, converted to shortcode attributes.', 'bello-widget'); ?></p>
-            <p><code>[bello_widget theme="light" position="bottom-left" accent_color="#FF6B2C"]</code></p>
+            <p><code>[zaidop_bello_widget theme="light" position="bottom-left" accent_color="#FF6B2C"]</code></p>
         </div>
         <?php
     }
@@ -327,7 +330,7 @@ final class Bello_Widget_Plugin {
         );
 
         $settings = $this->get_settings();
-        wp_localize_script(self::BLOCK_HANDLE, 'belloWidgetDefaults', array(
+        wp_localize_script(self::BLOCK_HANDLE, self::JS_DEFAULTS_OBJECT, array(
             'projectId' => $settings['project_id'],
             'widgetApiKey' => $settings['widget_api_key'],
             'apiBaseUrl' => $settings['api_base_url'],
@@ -351,7 +354,7 @@ final class Bello_Widget_Plugin {
             ),
         ));
 
-        register_block_type('bello/widget', array(
+        register_block_type(self::BLOCK_NAME, array(
             'editor_script' => self::BLOCK_HANDLE,
             'render_callback' => array($this, 'render_block'),
             'attributes' => array(
@@ -417,8 +420,7 @@ final class Bello_Widget_Plugin {
             'widget_button_title' => $defaults['widget_button_title'],
             'agent_enabled' => $defaults['agent_enabled'],
             'voice_enabled' => $defaults['voice_enabled'],
-            'orb_style' => '',
-        ), $atts, 'bello_widget');
+        ), $atts, self::SHORTCODE);
 
         $args = $this->normalize_args($atts);
 
@@ -505,7 +507,7 @@ final class Bello_Widget_Plugin {
             $opts['voiceEnabled'] = (bool) $args['voice_enabled'];
         }
 
-        $opts = apply_filters('bello_widget_init_options', $opts, $args);
+        $opts = apply_filters('zaidop_bello_widget_init_options', $opts, $args);
 
         $json = wp_json_encode($opts, JSON_UNESCAPED_SLASHES);
         $signature = md5($json);
@@ -585,10 +587,6 @@ final class Bello_Widget_Plugin {
     }
 
     public function sanitize_theme($value) {
-        if ($value === 'glass') {
-            return 'dark';
-        }
-
         $allowed = array('dark', 'light');
         return in_array($value, $allowed, true) ? $value : 'dark';
     }
@@ -631,17 +629,10 @@ final class Bello_Widget_Plugin {
 
     private function get_script_url() {
         $default = $this->get_local_script_url();
-        $url = apply_filters('bello_widget_script_url', $default);
+        $url = apply_filters('zaidop_bello_widget_script_url', $default);
 
         if (!is_string($url) || $url === '') {
             $url = $default;
-        }
-
-        if ($url === $default) {
-            $legacy_url = apply_filters('bello_widget_cdn_url', $default);
-            if (is_string($legacy_url) && $legacy_url !== '') {
-                $url = $legacy_url;
-            }
         }
 
         return esc_url_raw($url);
@@ -659,4 +650,4 @@ final class Bello_Widget_Plugin {
     }
 }
 
-Bello_Widget_Plugin::instance();
+Zaidop_Bello_Widget_Plugin::instance();
