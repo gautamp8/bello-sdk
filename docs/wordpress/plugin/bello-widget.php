@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bello Widget
  * Description: Embed the Bello voice widget via shortcode, block, or global settings.
- * Version: 0.4.1
+ * Version: 0.4.4
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Bello
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 final class Zaidop_Bello_Widget_Plugin {
-    const VERSION = '0.4.1';
+    const VERSION = '0.4.4';
     const HANDLE = 'zaidop-bello-widget-sdk';
     const BLOCK_HANDLE = 'zaidop-bello-widget-block';
     const OPTION_GROUP = 'zaidop_bello_widget';
@@ -40,6 +40,7 @@ final class Zaidop_Bello_Widget_Plugin {
     private function __construct() {
         add_action('init', array($this, 'register_block'));
         add_action('admin_init', array($this, 'register_settings'));
+        add_action('admin_init', array($this, 'add_privacy_policy_content'));
         add_action('admin_menu', array($this, 'add_settings_page'));
         add_action('admin_notices', array($this, 'render_admin_notices'));
         add_action('wp_enqueue_scripts', array($this, 'maybe_enqueue_global'));
@@ -129,6 +130,32 @@ final class Zaidop_Bello_Widget_Plugin {
         return $links;
     }
 
+    public function add_privacy_policy_content() {
+        if (!function_exists('wp_add_privacy_policy_content')) {
+            return;
+        }
+
+        $content = '<p class="privacy-policy-tutorial">'
+            . esc_html__('Suggested text that site owners can include in their privacy policy.', 'bello-widget')
+            . '</p>';
+        $content .= '<strong class="privacy-policy-tutorial">'
+            . esc_html__('Suggested text:', 'bello-widget')
+            . '</strong> ';
+        $content .= sprintf(
+            __(
+                'If you use Bello Widget on your site, pages that load the widget send technical data such as the visitor\'s IP address, browser information, and page URL to Bello so the widget can load and function. When a visitor starts a live session, the browser also connects to Bello to request session credentials and may send session metadata, audio input, and a generated session ID so the realtime session can be created and ended correctly. Bello may also return a realtime media server URL that the visitor\'s browser connects to directly during the live session. You can learn more in Bello\'s <a href="%1$s" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href="%2$s" target="_blank" rel="noopener noreferrer">Terms of Service</a>.',
+                'bello-widget'
+            ),
+            esc_url('https://www.heybello.dev/privacy'),
+            esc_url('https://www.heybello.dev/terms')
+        );
+
+        wp_add_privacy_policy_content(
+            __('Bello Widget', 'bello-widget'),
+            wp_kses_post(wpautop($content, false))
+        );
+    }
+
     public function render_admin_notices() {
         if (!current_user_can('manage_options')) {
             return;
@@ -145,10 +172,7 @@ final class Zaidop_Bello_Widget_Plugin {
             $messages[] = __('Bello Widget needs a Widget API Key before it can initialize on the frontend.', 'bello-widget');
         }
 
-        if (
-            $this->get_script_url() === $this->get_local_script_url() &&
-            !file_exists($this->get_local_script_path())
-        ) {
+        if (!file_exists($this->get_local_script_path())) {
             $messages[] = __('The bundled SDK asset is missing. Run `pnpm wordpress:build` before local testing or packaging the plugin.', 'bello-widget');
         }
 
@@ -452,13 +476,11 @@ final class Zaidop_Bello_Widget_Plugin {
             return;
         }
 
-        $script_url = $this->get_script_url();
-
         wp_enqueue_script(
             self::HANDLE,
-            $script_url,
+            $this->get_local_script_url(),
             array(),
-            $this->get_script_version($script_url),
+            $this->get_script_version(),
             true
         );
 
@@ -592,7 +614,15 @@ final class Zaidop_Bello_Widget_Plugin {
     }
 
     public function sanitize_accent_color($value) {
-        return sanitize_text_field((string) $value);
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        $sanitized = sanitize_hex_color($value);
+
+        return is_string($sanitized) ? $sanitized : '';
     }
 
     public function sanitize_widget_copy($value) {
@@ -627,22 +657,10 @@ final class Zaidop_Bello_Widget_Plugin {
         return plugins_url(self::SCRIPT_RELATIVE_PATH, __FILE__);
     }
 
-    private function get_script_url() {
-        $default = $this->get_local_script_url();
-        $url = apply_filters('zaidop_bello_widget_script_url', $default);
-
-        if (!is_string($url) || $url === '') {
-            $url = $default;
-        }
-
-        return esc_url_raw($url);
-    }
-
-    private function get_script_version($script_url) {
-        $default = $this->get_local_script_url();
+    private function get_script_version() {
         $path = $this->get_local_script_path();
 
-        if ($script_url === $default && file_exists($path)) {
+        if (file_exists($path)) {
             return (string) filemtime($path);
         }
 

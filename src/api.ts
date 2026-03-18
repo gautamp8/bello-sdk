@@ -9,7 +9,7 @@ declare const __BELLO_API_URL__: string;
 const API_BASE =
   typeof __BELLO_API_URL__ !== 'undefined'
     ? __BELLO_API_URL__
-    : 'https://api.heybello.dev';
+    : 'https://www.heybello.dev/api';
 
 function getBaseUrl(opts: Pick<InitOptions, 'apiBaseUrl'>): string {
   return (opts.apiBaseUrl ?? API_BASE).replace(/\/+$/, '');

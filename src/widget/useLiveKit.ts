@@ -8,7 +8,7 @@ declare const __BELLO_API_URL__: string;
 const API_BASE =
   typeof __BELLO_API_URL__ !== 'undefined'
     ? __BELLO_API_URL__
-    : 'https://api.heybello.dev';
+    : 'https://www.heybello.dev/api';
 
 /** Decode JWT payload and return the `exp` field (seconds since epoch). */
 function decodeJwtExp(token: string): number {

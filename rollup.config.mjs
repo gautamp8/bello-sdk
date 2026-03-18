@@ -51,7 +51,7 @@ const basePlugins = [
         process.env.BELLO_WIDGET_UI_MODE || 'synced'
       ),
       __BELLO_API_URL__: JSON.stringify(
-        process.env.BELLO_API_URL || 'https://api.heybello.dev'
+        process.env.BELLO_API_URL || 'https://www.heybello.dev/api'
       ),
     },
   }),
