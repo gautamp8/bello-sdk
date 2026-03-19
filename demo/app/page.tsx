@@ -16,7 +16,7 @@ export default function Home() {
           <BelloWidget
             projectId="YOUR_PROJECT_ID"
             widgetApiKey="YOUR_WIDGET_API_KEY"
-            apiBaseUrl="http://localhost:8001"
+            apiBaseUrl="http://localhost:3001"
           />
         </div>
       </div>

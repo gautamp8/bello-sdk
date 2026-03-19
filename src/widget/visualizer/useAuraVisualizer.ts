@@ -44,7 +44,7 @@ function useAnimatedValue<T>(initialValue: T) {
 }
 
 export function useAuraVisualizer(
-  state: AgentState | undefined,
+  state: AgentState | string | undefined,
   audioTrack?: LocalAudioTrack | RemoteAudioTrack | TrackReferenceOrPlaceholder,
 ) {
   const [speed, setSpeed] = useState(DEFAULT_SPEED);

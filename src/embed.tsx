@@ -27,20 +27,29 @@ try {
   const thisScript =
     (document.currentScript as HTMLScriptElement | null) ||
     (document.querySelector(
-      'script[data-project-id][src*="bello-embed"]'
+      'script[data-project-id][src*="bello-embed"], script[data-project-key][src*="bello-embed"]'
     ) as HTMLScriptElement | null);
 
   if (!thisScript) return;
 
   const projectId =
-    thisScript.getAttribute('data-project-id') || undefined;
+    thisScript.getAttribute('data-project-id') ||
+    thisScript.getAttribute('data-project-key') ||
+    undefined;
   const widgetApiKey =
-    thisScript.getAttribute('data-widget-api-key') || undefined;
+    thisScript.getAttribute('data-widget-api-key') ||
+    thisScript.getAttribute('data-api-key') ||
+    undefined;
 
-  if (!projectId) return;
+  if (!projectId) {
+    console.warn(
+      '[Bello] data-project-id or data-project-key is required. Widget will not initialize.'
+    );
+    return;
+  }
   if (!widgetApiKey) {
     console.warn(
-      '[Bello] data-widget-api-key is required. Widget will not initialize.'
+      '[Bello] data-widget-api-key or data-api-key is required. Widget will not initialize.'
     );
     return;
   }

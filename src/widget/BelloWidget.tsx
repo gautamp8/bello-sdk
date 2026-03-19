@@ -7,163 +7,58 @@ import {
 } from 'react';
 import { motion } from 'motion/react';
 import {
-  RoomContext,
   RoomAudioRenderer,
+  RoomContext,
   StartAudio,
   useVoiceAssistant,
 } from '@livekit/components-react';
-import type { AgentState } from '@livekit/components-react';
+import { ChevronDown, X } from 'lucide-react';
 import type { Room } from 'livekit-client';
-import type { AgentRichMessage, InfoModalState, InitOptions, Theme } from '../types';
+import type { InfoModalState, InitOptions, Theme } from '../types';
 import { useLiveKit } from './useLiveKit';
-import { AuraVisualizer } from './visualizer/AuraVisualizer';
-import { ControlBar } from './ControlBar';
-import { ChatTranscript } from './ChatTranscript';
-import { useCallingTone } from './useCallingTone';
-import { InfoCollectionModal } from './InfoCollectionModal';
 import { isSameDomain } from './domainUtils';
+import {
+  BelloPopupView,
+} from '../frontend-sync/components/ui/bello-popup-view';
+import { AgentAudioVisualizerAura } from '../frontend-sync/components/agents-ui/agent-audio-visualizer-aura';
+import { InfoCollectionModal } from '../frontend-sync/components/ui/info-collection-modal';
+import { Button } from '../frontend-sync/components/ui/button';
+import { cn } from '../frontend-sync/lib/utils';
+import {
+  mapInitOptionsToAgentConfig,
+} from '../frontend-adapter/agent-config';
+import type {
+  AgentRichMessage,
+  EmbedErrorDetails,
+} from '../frontend-adapter/embed-types';
+import { ShadowPortalProvider } from '../frontend-adapter/ShadowPortalContext';
+import { BelloWidgetLegacy } from './BelloWidgetLegacy';
 
-/* ── Inline SVG Icons ── */
+declare const __BELLO_WIDGET_UI_MODE__: string;
 
-const ChevronDownIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m6 9 6 6 6-6"/>
-  </svg>
-);
+type Position = NonNullable<InitOptions['position']>;
 
-const PhoneIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v0Z"/>
-  </svg>
-);
-
-/* ── Helpers ── */
-
-function isAgentAvailable(agentState: AgentState) {
-  return (
-    agentState === 'listening' ||
-    agentState === 'thinking' ||
-    agentState === 'speaking'
-  );
-}
-
-/* ── Inner popup content (inside RoomContext) ── */
-
-function PopupContent({
-  opts,
-  sessionStarted,
-  connected,
-  onDisconnect,
-  onError,
-  agentMessages,
-}: {
-  opts: InitOptions;
-  sessionStarted: boolean;
-  connected: boolean;
-  onDisconnect: () => void;
-  onError: (msg: string) => void;
-  agentMessages: AgentRichMessage[];
-}) {
-  const { state: agentState, audioTrack: agentAudioTrack } =
-    useVoiceAssistant();
-
-  const theme = opts.theme ?? 'dark';
-  const auraThemeMode = theme === 'light' ? 'light' : 'dark';
-  const auraColor = opts.accentColor || '#1FD5F9';
-
-  const isConnecting =
-    sessionStarted &&
-    !isAgentAvailable(agentState) &&
-    agentState !== 'disconnected';
-
-  // Calling tone while connecting
-  useCallingTone(isConnecting);
-
-  // Agent timeout: if not available after 10s, show error
-  const timedOutRef = useRef(false);
-  useEffect(() => {
-    if (!sessionStarted) return;
-
-    const timeout = setTimeout(() => {
-      if (!isAgentAvailable(agentState) && !timedOutRef.current) {
-        timedOutRef.current = true;
-        onError(
-          agentState === 'connecting'
-            ? 'Agent did not join the room.'
-            : 'Agent connected but did not complete initializing.'
-        );
-        onDisconnect();
-      }
-    }, 10_000);
-
-    return () => clearTimeout(timeout);
-  }, [agentState, sessionStarted, onDisconnect, onError]);
-
-  return (
-    <>
-      <RoomAudioRenderer />
-      <StartAudio label="Start Audio" />
-      <AgentAudioEnsurePlay />
-
-      {/* Header */}
-      <div className="bello-header">
-        <div className="bello-row">
-          <div className="bello-header-aura">
-            <AuraVisualizer
-              size="sm"
-              state={agentState}
-              audioTrack={agentAudioTrack}
-              themeMode={auraThemeMode}
-              color={auraColor}
-            />
-          </div>
-          <div className="bello-header-text">
-            <div className="bello-title">
-              {opts.widgetTitle ?? 'Voice Assistant'}
-            </div>
-            <div className="bello-subtitle">
-              {opts.widgetSubtitle ?? 'Ask me anything'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="bello-main">
-        {/* Connecting overlay */}
-        {isConnecting && (
-          <div className="bello-connecting-overlay">
-            <div className="bello-connecting-aura">
-              <AuraVisualizer
-                size="md"
-                state={agentState}
-                themeMode={auraThemeMode}
-                color={auraColor}
-              />
-              <div className="bello-connecting-icon">
-                <PhoneIcon />
-              </div>
-            </div>
-            <p className="bello-connecting-text">Connecting...</p>
-          </div>
-        )}
-
-        {/* Chat Transcript */}
-        <ChatTranscript agentState={agentState} agentMessages={agentMessages} />
-      </div>
-
-      {/* Footer: Control Bar */}
-      <div className="bello-footer">
-        <ControlBar
-          isConnected={connected}
-          onDisconnect={onDisconnect}
-        />
-      </div>
-    </>
-  );
-}
-
-/* ── Ensure agent audio plays if auto-attach fails ── */
+const POPUP_ANCHOR_MAP: Record<
+  Position,
+  { popup: string; origin: string }
+> = {
+  'bottom-right': {
+    popup: 'bottom-full right-0 mb-3',
+    origin: 'bottom right',
+  },
+  'bottom-left': {
+    popup: 'bottom-full left-0 mb-3',
+    origin: 'bottom left',
+  },
+  'top-right': {
+    popup: 'top-full right-0 mt-3',
+    origin: 'top right',
+  },
+  'top-left': {
+    popup: 'top-full left-0 mt-3',
+    origin: 'top left',
+  },
+};
 
 function AgentAudioEnsurePlay() {
   const { audioTrack } = useVoiceAssistant();
@@ -174,13 +69,18 @@ function AgentAudioEnsurePlay() {
     const el = (audioTrack as any)?.attachedElements?.[0] as
       | HTMLAudioElement
       | undefined;
-    const kick = (a: HTMLMediaElement) => {
+
+    const kick = (audio: HTMLMediaElement) => {
       try {
-        a.muted = false;
-        (a as any).playsInline = true;
-        const p = a.play();
-        if (p && typeof p.then === 'function') p.catch(() => {});
-      } catch {}
+        audio.muted = false;
+        (audio as any).playsInline = true;
+        const promise = audio.play();
+        if (promise && typeof promise.then === 'function') {
+          promise.catch(() => {});
+        }
+      } catch {
+        // no-op
+      }
     };
 
     if (el) {
@@ -199,48 +99,84 @@ function AgentAudioEnsurePlay() {
       } else if ((audioTrack as any).mediaStream) {
         (audio as any).srcObject = (audioTrack as any).mediaStream;
       }
+
       kick(audio);
-    } catch {}
+    } catch {
+      // no-op
+    }
   }, [audioTrack]);
 
   return null;
 }
 
-/* ── Main Widget Component ── */
-
 export function BelloWidget({
   opts,
   theme,
   onClose,
+  portalContainer,
 }: {
   opts: InitOptions;
   theme: Theme;
   onClose: () => void;
+  portalContainer?: HTMLElement | null;
 }) {
+  if (__BELLO_WIDGET_UI_MODE__ === 'legacy') {
+    return <BelloWidgetLegacy opts={opts} theme={theme} onClose={onClose} />;
+  }
+
   const [open, setOpen] = useState(false);
-
-  // Animation guard: prevent rapid open/close race conditions
-  const isAnimatingRef = useRef(false);
-
-  // Agent rich messages (sent via RPC, displayed in chat)
-  const [agentMessages, setAgentMessages] = useState<AgentRichMessage[]>([]);
-
-  // Info collection modal state
+  const [agentMessages, setAgentMessages] = useState<AgentRichMessage[]>(
+    [],
+  );
   const [infoModal, setInfoModal] = useState<InfoModalState>({
     open: false,
     fields: [],
     reason: '',
     resolve: null,
   });
+  const [currentError, setCurrentError] =
+    useState<EmbedErrorDetails | null>(null);
 
+  const isAnimatingRef = useRef(false);
   const agentOn = opts.agentEnabled !== false;
-  const auraColor = opts.accentColor || '#1FD5F9';
-  const auraThemeMode = theme === 'light' ? 'light' : 'dark';
+  const agentConfig = useMemo(() => mapInitOptionsToAgentConfig(opts), [opts]);
 
-  const { room, error, setError, connecting, connected } = useLiveKit(
+  const { room, error, setError, connected } = useLiveKit(
     opts,
-    open && agentOn
+    open && agentOn,
   );
+
+  const themeClasses = useMemo(() => {
+    switch (theme) {
+      case 'light':
+        return {
+          container:
+            'bg-white border-gray-200 text-gray-900 shadow-lg pr-2 pl-2 py-3 rounded-2xl',
+          button:
+            'bg-black text-white px-6 py-3 rounded-full font-medium hover:opacity-90 transition-colors duration-200 shadow-sm',
+          triggerBtn:
+            'bg-white text-gray-900 px-6 py-3 rounded-full font-medium hover:opacity-90 transition-colors duration-200 shadow-sm border',
+        };
+      case 'dark':
+        return {
+          container:
+            'bg-bello-dark-main border-bello-dark-secondary text-white shadow-2xl pr-2 pl-2 py-3 rounded-2xl',
+          button:
+            'bg-white text-gray-900 px-6 py-3 rounded-full font-medium hover:opacity-90 transition-colors duration-200 shadow-sm',
+          triggerBtn:
+            'bg-bello-dark-main text-white px-6 py-3 rounded-full font-medium hover:opacity-90 transition-colors duration-200 shadow-sm',
+        };
+      default:
+        return {
+          container:
+            'bg-gray-900 border-gray-700 text-white shadow-2xl pr-2 pl-2 py-3 rounded-2xl',
+          button:
+            'bg-white text-gray-900 px-6 py-3 rounded-full font-medium hover:opacity-90 transition-colors duration-200 shadow-sm',
+          triggerBtn:
+            'bg-gray-800 text-white px-6 py-3 rounded-full font-medium hover:opacity-90 transition-colors duration-200 shadow-sm border',
+        };
+    }
+  }, [theme]);
 
   const guardedToggle = useCallback((nextOpen: boolean) => {
     if (isAnimatingRef.current) return;
@@ -251,64 +187,96 @@ export function BelloWidget({
     }, 350);
   }, []);
 
-  // Programmatic open/close support
+  const resetLocalState = useCallback(() => {
+    setAgentMessages([]);
+    setInfoModal({ open: false, fields: [], reason: '', resolve: null });
+    setCurrentError(null);
+    setError(null);
+  }, [setError]);
+
+  const openWidget = useCallback(() => {
+    resetLocalState();
+    guardedToggle(true);
+  }, [guardedToggle, resetLocalState]);
+
+  const collapse = useCallback(() => {
+    try {
+      room.disconnect();
+    } catch {
+      // no-op
+    }
+    guardedToggle(false);
+    resetLocalState();
+    onClose();
+  }, [guardedToggle, onClose, resetLocalState, room]);
+
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       const t = detail?.type;
-      if (t === 'open') guardedToggle(true);
-      if (t === 'close') {
-        guardedToggle(false);
-        onClose();
-      }
+      if (t === 'open') openWidget();
+      if (t === 'close') collapse();
     };
+
     window.addEventListener('bello:event', handler as any);
-    return () =>
+    return () => {
       window.removeEventListener('bello:event', handler as any);
-  }, [onClose, guardedToggle]);
+    };
+  }, [collapse, openWidget]);
 
   const cfg = useMemo(
     () => ({
-      title: opts.widgetTitle ?? 'Need support?',
+      title: opts.widgetTitle ?? 'Chat with AI',
       cta: opts.widgetButtonTitle ?? 'Start chat',
-      pos: opts.position ?? 'bottom-right',
+      pos: (opts.position ?? 'bottom-right') as Position,
     }),
-    [opts]
+    [opts],
   );
 
-  const cls = theme === 'dark' ? 'theme-dark' : 'theme-light';
+  const anchor = POPUP_ANCHOR_MAP[cfg.pos];
+  const themeClass = theme === 'dark' ? 'widget-theme-dark dark' : 'widget-theme-light';
 
-  const collapse = useCallback(() => {
-    setOpen(false);
-    setAgentMessages([]);
-    setInfoModal({ open: false, fields: [], reason: '', resolve: null });
-    onClose();
-  }, [onClose]);
+  useEffect(() => {
+    if (!error) return;
 
-  // ------------------------------------------------------------------
-  // Register RPC handlers for agent client tools
-  // ------------------------------------------------------------------
+    const lowered = error.toLowerCase();
+    const isRateLimit = lowered.includes('limit') || lowered.includes('429');
+
+    setCurrentError({
+      title: isRateLimit ? 'Usage Limit Reached' : 'Connection Error',
+      description: error,
+    });
+  }, [error]);
+
+  useEffect(() => {
+    if (connected && currentError) {
+      setCurrentError(null);
+    }
+  }, [connected, currentError]);
+
   const registerRpcHandlers = useCallback(
     (localRoom: Room) => {
       const lp = localRoom.localParticipant;
 
-      // Navigate to URL (new tab, same-domain only)
       lp.registerRpcMethod('client.navigate', async (data) => {
         const { url } = JSON.parse(data.payload);
         if (!isSameDomain(window.location.hostname, url)) {
-          throw new Error('Navigation blocked: URL is not on the same domain');
+          throw new Error(
+            'Navigation blocked: URL is not on the same domain',
+          );
         }
         window.open(url, '_blank', 'noopener,noreferrer');
         return JSON.stringify({ success: true });
       });
 
-      // Show a rich message / link in the chat
       lp.registerRpcMethod('client.showMessage', async (data) => {
         const { message, url } = JSON.parse(data.payload);
         setAgentMessages((prev) => [
           ...prev,
           {
-            id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            id: `msg-${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2, 7)}`,
             message,
             url,
             timestamp: Date.now(),
@@ -317,7 +285,6 @@ export function BelloWidget({
         return JSON.stringify({ success: true });
       });
 
-      // Collect user info via modal
       lp.registerRpcMethod('client.collectInfo', async (data) => {
         const { fields, reason } = JSON.parse(data.payload);
         const result = await new Promise<string>((resolve) => {
@@ -326,7 +293,6 @@ export function BelloWidget({
         return result;
       });
 
-      // Copy text to clipboard
       lp.registerRpcMethod('client.copyToClipboard', async (data) => {
         const { text } = JSON.parse(data.payload);
         try {
@@ -340,16 +306,12 @@ export function BelloWidget({
     [],
   );
 
-  // Register RPC handlers when connected
   useEffect(() => {
     if (connected && room) {
       registerRpcHandlers(room);
     }
-  }, [connected, room, registerRpcHandlers]);
+  }, [connected, registerRpcHandlers, room]);
 
-  // ------------------------------------------------------------------
-  // Info modal handlers
-  // ------------------------------------------------------------------
   const handleInfoSubmit = useCallback(
     (data: Record<string, string>) => {
       infoModal.resolve?.(JSON.stringify(data));
@@ -363,121 +325,138 @@ export function BelloWidget({
     setInfoModal({ open: false, fields: [], reason: '', resolve: null });
   }, [infoModal]);
 
+  const dismissError = useCallback(() => {
+    const isRateLimit = currentError?.title === 'Usage Limit Reached';
+    setCurrentError(null);
+    setError(null);
+
+    if (isRateLimit) {
+      collapse();
+    }
+  }, [collapse, currentError?.title, setError]);
+
   return (
-    <div className={cls}>
-      {/* Launcher (closed) */}
-      {!open && (
-        <div className="bello-container bello-row">
-          <div className="bello-launcher-aura">
-            <AuraVisualizer
-              size="sm"
-              state="disconnected"
-              themeMode={auraThemeMode}
-              color={auraColor}
+    <div className={cn('relative', themeClass)}>
+      {open && (
+        <div className="fixed inset-0 z-40" onClick={collapse} />
+      )}
+
+      <div className="relative z-50">
+        {open ? (
+          <button
+            onClick={collapse}
+            title="Close"
+            className={themeClasses.triggerBtn}
+          >
+            <ChevronDown size={24} />
+          </button>
+        ) : (
+          <div className={themeClasses.container}>
+            <div className="flex items-center">
+              <div className="flex-shrink-0 px-2">
+                <AgentAudioVisualizerAura
+                  size="sm"
+                  state="disconnected"
+                  themeMode={theme === 'light' ? 'light' : 'dark'}
+                  color={opts.accentColor || '#1FD5F9'}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-lg font-bold">{cfg.title}</div>
+                <button className={themeClasses.button} onClick={openWidget}>
+                  {cfg.cta}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <motion.div
+          className={cn(
+            `absolute ${anchor.popup}`,
+            'w-[420px] max-w-[95vw] h-[620px] max-h-[85vh] min-h-[400px] rounded-xl border shadow-lg',
+            themeClasses.container,
+          )}
+          style={{ transformOrigin: anchor.origin }}
+          initial={false}
+          animate={{
+            opacity: open ? 1 : 0,
+            scale: open ? 1 : 0.98,
+            y: open ? 0 : 6,
+            pointerEvents: open ? 'auto' : 'none',
+          }}
+        >
+          <div className="relative h-full w-full">
+            <motion.div
+              className="absolute inset-0 flex h-full w-full flex-col items-center justify-center gap-5 p-4"
+              initial={false}
+              animate={{
+                opacity: currentError ? 1 : 0,
+                pointerEvents: currentError ? 'auto' : 'none',
+              }}
+            >
+              <div className="flex items-center justify-center px-4">
+                <div className="h-12 w-12 rounded-full bg-muted-foreground/20 flex items-center justify-center">
+                  <X className="w-6 h-6 text-muted-foreground" />
+                </div>
+              </div>
+              <div className="flex w-full flex-col justify-center gap-1 overflow-auto px-4 text-center bg-bello-dark p-4 rounded-lg">
+                <span className="text-sm font-medium text-white">
+                  {currentError?.title}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {currentError?.description}
+                </span>
+              </div>
+              <Button onClick={dismissError} size="sm">
+                <X className="w-4 h-4 mr-2" />
+                Close
+              </Button>
+            </motion.div>
+
+            {agentOn ? (
+              <RoomContext.Provider value={room}>
+                <ShadowPortalProvider container={portalContainer ?? null}>
+                  <RoomAudioRenderer />
+                  <StartAudio label="Start Audio" />
+                  <AgentAudioEnsurePlay />
+                  <motion.div
+                    className="absolute inset-0"
+                    initial={false}
+                    animate={{
+                      opacity: currentError ? 0 : 1,
+                      pointerEvents: currentError ? 'none' : 'auto',
+                    }}
+                  >
+                    <BelloPopupView
+                      config={agentConfig}
+                      onDisplayError={setCurrentError}
+                      disabled={!open}
+                      sessionStarted={open}
+                      agentMessages={agentMessages}
+                    />
+                  </motion.div>
+                </ShadowPortalProvider>
+              </RoomContext.Provider>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-muted-foreground">
+                  UI preview - Agent disabled
+                </p>
+              </div>
+            )}
+
+            <InfoCollectionModal
+              open={infoModal.open}
+              fields={infoModal.fields}
+              reason={infoModal.reason}
+              theme={theme === 'light' ? 'light' : 'dark'}
+              onSubmit={handleInfoSubmit}
+              onDismiss={handleInfoDismiss}
             />
           </div>
-          <div className="bello-title-container">
-            <div className="bello-hero">{cfg.title}</div>
-            <button
-              className="bello-trigger"
-              onClick={() => guardedToggle(true)}
-            >
-              {cfg.cta}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Widget (open) */}
-      <motion.div
-        className="bello-pop"
-        data-pos={cfg.pos}
-        initial={false}
-        animate={{
-          opacity: open ? 1 : 0,
-          scale: open ? 1 : 0.98,
-          y: open ? 0 : 6,
-          pointerEvents: open ? 'auto' : 'none',
-        }}
-      >
-        <div className="bello-card bello-body">
-          {error ? (
-            <>
-              <div className="bello-header">
-                <div className="bello-row">
-                  <div className="bello-header-text">
-                    <div className="bello-title">{cfg.title}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bello-main">
-                <div className="bello-error">
-                  <div className="bello-error-title">Error</div>
-                  <div className="bello-error-text">{error}</div>
-                  <button
-                    className="bello-trigger small mt"
-                    onClick={() => setError(null)}
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : agentOn ? (
-            <RoomContext.Provider value={room}>
-              <PopupContent
-                opts={opts}
-                sessionStarted={connecting || connected}
-                connected={connected}
-                onDisconnect={collapse}
-                onError={(msg) => setError(msg)}
-                agentMessages={agentMessages}
-              />
-            </RoomContext.Provider>
-          ) : (
-            <>
-              <div className="bello-header">
-                <div className="bello-row">
-                  <div className="bello-header-text">
-                    <div className="bello-title">{cfg.title}</div>
-                    <div className="bello-subtitle">
-                      UI preview - Agent disabled
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bello-main">
-                <div className="center">
-                  <p className="status">
-                    UI preview - Agent disabled
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Info collection modal — rendered inside the card body */}
-          <InfoCollectionModal
-            open={infoModal.open}
-            fields={infoModal.fields}
-            reason={infoModal.reason}
-            onSubmit={handleInfoSubmit}
-            onDismiss={handleInfoDismiss}
-          />
-        </div>
-      </motion.div>
-
-      {/* FAB chevron — visible only when open */}
-      {open && (
-        <button
-          className="bello-fab"
-          onClick={collapse}
-          aria-label="Collapse widget"
-          title="Collapse"
-        >
-          <ChevronDownIcon />
-        </button>
-      )}
+        </motion.div>
+      </div>
     </div>
   );
 }
