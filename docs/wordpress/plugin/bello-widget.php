@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bello Widget
  * Description: Embed the Bello voice widget via shortcode, block, or global settings.
- * Version: 0.4.4
+ * Version: 0.4.5
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Bello
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 final class Zaidop_Bello_Widget_Plugin {
-    const VERSION = '0.4.4';
+    const VERSION = '0.4.5';
     const HANDLE = 'zaidop-bello-widget-sdk';
     const BLOCK_HANDLE = 'zaidop-bello-widget-block';
     const OPTION_GROUP = 'zaidop_bello_widget';

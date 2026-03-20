@@ -4,7 +4,7 @@ Tags: voice, chat, widget, ai
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.4
+Stable tag: 0.4.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,10 @@ Privacy policy: https://www.heybello.dev/privacy
 
 == Changelog ==
 
+= 0.4.5 =
+* Added bundled human-readable SDK source files and rebuild notes for WordPress.org review.
+* Documented the public repository source links alongside the bundled source snapshot.
+
 = 0.4.4 =
 * Added suggested privacy-policy text in WordPress admin via `wp_add_privacy_policy_content()`.
 * Bundled the human-readable SDK source snapshot and local rebuild instructions inside the plugin package.
@@ -114,6 +118,9 @@ Privacy policy: https://www.heybello.dev/privacy
 * Added repo-local wp-env workflow for local testing.
 
 == Upgrade Notice ==
+
+= 0.4.5 =
+This release updates the plugin package for WordPress.org review with bundled SDK source disclosure.
 
 = 0.4.4 =
 This release adds suggested Bello service disclosure text to the WordPress privacy-policy guide.
