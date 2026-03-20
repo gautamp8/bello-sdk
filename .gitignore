@@ -26,3 +26,4 @@ coverage/
 .wp-env/
 docs/wordpress/dist/
 docs/wordpress/plugin/assets/sdk/
+docs/wordpress/plugin/source/sdk/

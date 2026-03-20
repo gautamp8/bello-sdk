@@ -26,19 +26,29 @@ Features:
 
 This plugin ships with a generated frontend bundle at `assets/sdk/bello-embed.iife.js`.
 
-Human-readable source code for the generated bundle and the WordPress wrapper is maintained in the public repository:
+Human-readable source code for that generated bundle is included directly in this plugin package:
+
+* Source overview and rebuild notes: `source/README.md`
+* SDK source snapshot: `source/sdk/src/`
+* SDK build dependencies: `source/sdk/package.json`
+* SDK bundle config: `source/sdk/vite.config.ts`
+* SDK CSS build files: `source/sdk/scripts/build-widget-css.mjs` and `source/sdk/scripts/widget-tailwind-input.css`
+
+The same source is also maintained in the public repository:
 
 * Repository: https://github.com/gautamp8/bello-sdk
 * WordPress plugin source: https://github.com/gautamp8/bello-sdk/tree/main/docs/wordpress/plugin
 * SDK source used to build `assets/sdk/bello-embed.iife.js`: https://github.com/gautamp8/bello-sdk/tree/main/src
-* Build instructions: https://github.com/gautamp8/bello-sdk/tree/main/docs/wordpress
+* WordPress build documentation: https://github.com/gautamp8/bello-sdk/tree/main/docs/wordpress
 
-To rebuild the plugin package from source:
+To rebuild `assets/sdk/bello-embed.iife.js` from the included source snapshot:
 
-1. Run `pnpm install`
-2. Run `pnpm wordpress:zip`
+1. Change into `source/sdk`
+2. Run `pnpm install`
+3. Run `pnpm exec node ./scripts/build-widget-css.mjs`
+4. Run `BELLO_EMBED_OUT_DIR=../../assets/sdk BELLO_EMBED_FORMATS=iife BELLO_EMBED_EMPTY_OUT_DIR=true BELLO_DISABLE_PUBLIC_DIR=true BELLO_EMBED_SOURCEMAP=false pnpm exec vite build --mode embed`
 
-This rebuilds the bundled SDK asset and creates `docs/wordpress/dist/bello-widget.zip`.
+That rebuilds the bundled SDK asset directly inside the plugin package.
 
 == Installation ==
 
@@ -82,6 +92,7 @@ Privacy policy: https://www.heybello.dev/privacy
 
 = 0.4.4 =
 * Added suggested privacy-policy text in WordPress admin via `wp_add_privacy_policy_content()`.
+* Bundled the human-readable SDK source snapshot and local rebuild instructions inside the plugin package.
 
 = 0.4.3 =
 * Updated the default Bello API base URL to `https://www.heybello.dev/api` across the bundled SDK and WordPress package.
